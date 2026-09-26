@@ -17,7 +17,7 @@ export function SiteHeader() {
     { href: "/", label: "Início", current: pathname === "/" },
     { href: "/recursos", label: "Recursos", current: pathname === "/recursos" },
     { href: homeAnchor("#clareza"), label: "Clareza para o cliente", current: false },
-    { href: homeAnchor("#seguranca"), label: "Segurança", current: false },
+    { href: "/seguranca", label: "Segurança", current: pathname === "/seguranca" },
   ];
 
   useEffect(() => {

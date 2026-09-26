@@ -1,83 +1,129 @@
-﻿"use client";
+"use client";
 
-import { useSyncExternalStore } from "react";
-import { MoonIcon, SunIcon, SystemIcon } from "./icons";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { CheckIcon, MoonIcon, SunIcon, SystemIcon } from "./icons";
 
 type ThemePreference = "system" | "light" | "dark";
-type ThemeSnapshot = "system-light" | "system-dark" | "light" | "dark";
+type ThemeOption = [ThemePreference, string, typeof SunIcon];
 
 const THEME_KEY = "jurisvia-theme";
 const THEME_EVENT = "jurisvia-theme-change";
+const options: ThemeOption[] = [
+  ["light", "Claro", SunIcon],
+  ["dark", "Escuro", MoonIcon],
+  ["system", "Sistema", SystemIcon],
+];
 
-function getPreference(): ThemePreference {
-  const saved = window.localStorage.getItem(THEME_KEY);
-  return saved === "light" || saved === "dark" ? saved : "system";
+function preference(): ThemePreference {
+  const value = localStorage.getItem(THEME_KEY);
+  return value === "light" || value === "dark" ? value : "system";
 }
 
-function resolveTheme(preference: ThemePreference) {
-  return preference === "system"
-    ? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-    : preference;
+function resolvedTheme(value: ThemePreference) {
+  return value === "system"
+    ? matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    : value;
 }
 
-function getSnapshot(): ThemeSnapshot {
-  const preference = getPreference();
-  const resolved = resolveTheme(preference);
-  return preference === "system" ? `system-${resolved}` : resolved;
+function snapshot() {
+  const value = preference();
+  const resolved = resolvedTheme(value);
+  return value === "system" ? `system-${resolved}` : resolved;
 }
 
-function getServerSnapshot(): ThemeSnapshot {
-  return "system-light";
-}
-
-function applyTheme(preference: ThemePreference) {
-  const resolved = resolveTheme(preference);
+function apply(value: ThemePreference) {
+  const resolved = resolvedTheme(value);
   document.documentElement.dataset.theme = resolved;
   document.documentElement.style.colorScheme = resolved;
 }
 
 function subscribe(callback: () => void) {
-  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const media = matchMedia("(prefers-color-scheme: dark)");
   const emit = () => {
-    applyTheme(getPreference());
+    apply(preference());
     callback();
   };
+  addEventListener(THEME_EVENT, emit);
+  addEventListener("storage", emit);
   media.addEventListener("change", emit);
-  window.addEventListener(THEME_EVENT, emit);
-  window.addEventListener("storage", emit);
   return () => {
+    removeEventListener(THEME_EVENT, emit);
+    removeEventListener("storage", emit);
     media.removeEventListener("change", emit);
-    window.removeEventListener(THEME_EVENT, emit);
-    window.removeEventListener("storage", emit);
   };
 }
 
 export function ThemeControl() {
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const preference: ThemePreference = snapshot.startsWith("system-") ? "system" : snapshot as ThemePreference;
-  const resolved = snapshot.endsWith("dark") ? "dark" : "light";
-  const label = preference === "system"
-    ? `Tema do sistema (${resolved === "dark" ? "escuro" : "claro"})`
-    : `Tema ${resolved === "dark" ? "escuro" : "claro"}`;
+  const currentSnapshot = useSyncExternalStore(subscribe, snapshot, () => "system-light");
+  const current: ThemePreference = currentSnapshot.startsWith("system") ? "system" : currentSnapshot as ThemePreference;
+  const [open, setOpen] = useState(false);
+  const [focusIndex, setFocusIndex] = useState(0);
+  const wrapper = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const items = useRef<(HTMLButtonElement | null)[]>([]);
 
-  function changeTheme(value: ThemePreference) {
-    if (value === "system") localStorage.removeItem(THEME_KEY);
-    else localStorage.setItem(THEME_KEY, value);
-    applyTheme(value);
-    window.dispatchEvent(new Event(THEME_EVENT));
+  useEffect(() => {
+    if (!open) return;
+    items.current[focusIndex]?.focus();
+    const closeOutside = (event: PointerEvent) => {
+      if (!wrapper.current?.contains(event.target as Node)) setOpen(false);
+    };
+    addEventListener("pointerdown", closeOutside);
+    return () => removeEventListener("pointerdown", closeOutside);
+  }, [open, focusIndex]);
+
+  function openMenu() {
+    const selected = options.findIndex(([value]) => value === current);
+    setFocusIndex(selected);
+    setOpen(true);
   }
 
+  function choose(value: ThemePreference) {
+    if (value === "system") localStorage.removeItem(THEME_KEY);
+    else localStorage.setItem(THEME_KEY, value);
+    apply(value);
+    dispatchEvent(new Event(THEME_EVENT));
+    setOpen(false);
+    trigger.current?.focus();
+  }
+
+  function handleMenuKey(event: React.KeyboardEvent) {
+    let next = focusIndex;
+    if (event.key === "ArrowDown") next = (focusIndex + 1) % options.length;
+    else if (event.key === "ArrowUp") next = (focusIndex + options.length - 1) % options.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = options.length - 1;
+    else if (event.key === "Escape") {
+      event.preventDefault();
+      setOpen(false);
+      trigger.current?.focus();
+      return;
+    } else if (event.key === "Tab") {
+      setOpen(false);
+      return;
+    } else return;
+    event.preventDefault();
+    setFocusIndex(next);
+  }
+
+  const TriggerIcon = current === "light" ? SunIcon : current === "dark" ? MoonIcon : SystemIcon;
+
   return (
-    <label className="theme-control" title={label}>
-      <span className="theme-icon" aria-hidden="true">
-        {preference === "system" ? <SystemIcon /> : resolved === "dark" ? <MoonIcon /> : <SunIcon />}
-      </span>
-      <span className="sr-only">{label}. Selecione claro, escuro ou sistema.</span>
-      <select aria-label={`${label}. Alterar tema de cores`} value={preference} onChange={(event) => changeTheme(event.target.value as ThemePreference)}>
-        <option value="system">Usar tema do sistema</option>
-        <option value="light">Usar tema claro</option>
-        <option value="dark">Usar tema escuro</option>
-      </select>
-    </label>
+    <div className="theme-popup" ref={wrapper} onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
+    }}>
+      <button ref={trigger} className="theme-trigger" type="button" aria-label="Alterar tema" aria-haspopup="menu" aria-expanded={open} onClick={() => open ? setOpen(false) : openMenu()}>
+        <TriggerIcon />
+      </button>
+      {open && (
+        <div className="theme-menu" role="menu" aria-label="Tema de cores" onKeyDown={handleMenuKey}>
+          {options.map(([value, label, Icon], index) => (
+            <button key={value} ref={(element) => { items.current[index] = element; }} role="menuitemradio" aria-checked={current === value} tabIndex={index === focusIndex ? 0 : -1} onFocus={() => setFocusIndex(index)} onClick={() => choose(value)}>
+              <Icon /><span>{label}</span>{current === value && <CheckIcon />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

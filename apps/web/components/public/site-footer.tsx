@@ -9,7 +9,7 @@ export function SiteFooter() {
           <span className="provisional-note">Nome provisório em validação.</span>
         </div>
         <nav aria-label="Navegação do rodapé">
-          <Link href="/">Início</Link><Link href="/recursos">Recursos</Link><Link href="/#clareza">Clareza para o cliente</Link><Link href="/#seguranca">Segurança</Link><Link href="/#duvidas">Dúvidas</Link>
+          <Link href="/">Início</Link><Link href="/recursos">Recursos</Link><Link href="/#clareza">Clareza para o cliente</Link><Link href="/seguranca">Segurança</Link><Link href="/#duvidas">Dúvidas</Link>
         </nav>
       </div>
       <div className="container footer-bottom"><span>Proposta de produto em desenvolvimento.</span><Link href="/">Voltar ao início</Link></div>

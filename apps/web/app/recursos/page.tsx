@@ -1,5 +1,6 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { ResourcesPage } from "@/components/public/resources-page";
+import { SectionReveals } from "@/components/public/section-reveals";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
 
@@ -19,7 +20,7 @@ export default function Recursos() {
     <>
       <a className="skip-link" href="#conteudo">Pular para o conteúdo</a>
       <SiteHeader />
-      <main id="conteudo" tabIndex={-1}><ResourcesPage /></main>
+      <main id="conteudo" tabIndex={-1}><SectionReveals /><ResourcesPage /></main>
       <SiteFooter />
     </>
   );
