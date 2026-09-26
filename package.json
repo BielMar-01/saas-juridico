@@ -1,0 +1,14 @@
+{
+  "name": "saas-juridico",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.23.0",
+  "engines": { "node": ">=24.0.0", "pnpm": ">=11.0.0" },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck"
+  },
+  "devDependencies": { "turbo": "2.11.4" }
+}

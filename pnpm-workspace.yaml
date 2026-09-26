@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+minimumReleaseAgeExclude:
+  - '@types/node@26.6.3'
+
+allowBuilds:
+  unrs-resolver: true

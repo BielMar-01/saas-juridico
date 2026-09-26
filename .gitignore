@@ -1,0 +1,22 @@
+# Dependencies and builds
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editors and operating system
+.DS_Store
+Thumbs.db
+.vscode/*.local.json
+
+# Logs
+*.log
+pnpm-debug.log*
