@@ -1,3 +1,4 @@
+import Link from "next/link";
 export function SiteFooter() {
   return (
     <footer className="site-footer">
@@ -8,16 +9,10 @@ export function SiteFooter() {
           <span className="provisional-note">Nome provisório em validação.</span>
         </div>
         <nav aria-label="Navegação do rodapé">
-          <a href="#plataforma">Plataforma</a>
-          <a href="#clareza">Clareza para o cliente</a>
-          <a href="#seguranca">Segurança</a>
-          <a href="#duvidas">Dúvidas</a>
+          <Link href="/">Início</Link><Link href="/recursos">Recursos</Link><Link href="/#clareza">Clareza para o cliente</Link><Link href="/#seguranca">Segurança</Link><Link href="/#duvidas">Dúvidas</Link>
         </nav>
       </div>
-      <div className="container footer-bottom">
-        <span>Proposta de produto em desenvolvimento.</span>
-        <a href="#inicio">Voltar ao início</a>
-      </div>
+      <div className="container footer-bottom"><span>Proposta de produto em desenvolvimento.</span><Link href="/">Voltar ao início</Link></div>
     </footer>
   );
 }

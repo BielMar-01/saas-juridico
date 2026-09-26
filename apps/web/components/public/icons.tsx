@@ -72,3 +72,15 @@ export function CloseIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function SunIcon(props: IconProps) {
+  return <svg {...baseProps} {...props}><circle cx="12" cy="12" r="3.5" /><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41" /></svg>;
+}
+
+export function MoonIcon(props: IconProps) {
+  return <svg {...baseProps} {...props}><path d="M20.5 14.1A8.3 8.3 0 0 1 9.9 3.5 8.5 8.5 0 1 0 20.5 14.1Z" /></svg>;
+}
+
+export function SystemIcon(props: IconProps) {
+  return <svg {...baseProps} {...props}><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8M12 17v4" /></svg>;
+}
