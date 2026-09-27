@@ -1,7 +1,2 @@
-import type { Metadata } from "next";
-import { ContactPage } from "@/components/public/contact-page";
-import { SectionReveals } from "@/components/public/section-reveals";
-import { SiteFooter } from "@/components/public/site-footer";
-import { SiteHeader } from "@/components/public/site-header";
-export const metadata:Metadata={title:"Contato | JurisVia",description:"Conheça a prévia do futuro canal de contato do JurisVia. Nenhum dado é enviado ou armazenado."};
-export default function Contato(){return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><SiteHeader/><main id="conteudo" tabIndex={-1}><SectionReveals/><ContactPage/></main><SiteFooter/></>}
+import {PageJsonLd} from "@/components/public/page-json-ld";
+import {ContactPage} from "@/components/public/contact-page";import {SectionReveals} from "@/components/public/section-reveals";import {SiteFooter} from "@/components/public/site-footer";import {SiteHeader} from "@/components/public/site-header";import {pageMetadata} from "@/lib/seo";export const metadata=pageMetadata("Contato","Conheça a prévia do futuro canal de contato do JurisVia. Nenhum dado é enviado ou armazenado.","/contato");export default function Page(){return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><SiteHeader/><main id="conteudo" tabIndex={-1}><SectionReveals/><ContactPage/></main><PageJsonLd name="Contato" description="Prévia do futuro canal de contato." path="/contato"/><SiteFooter/></>}

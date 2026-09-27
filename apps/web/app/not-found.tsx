@@ -1,0 +1,4 @@
+import type {Metadata} from "next";
+import Link from "next/link";import {SiteHeader} from "@/components/public/site-header";import {SiteFooter} from "@/components/public/site-footer";
+export const metadata:Metadata={title:"Página não encontrada",description:"A página solicitada não foi encontrada no site do JurisVia.",robots:{index:false,follow:false}};
+export default function NotFound(){return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><SiteHeader/><main id="conteudo" className="not-found" tabIndex={-1}><div className="container"><p className="eyebrow">Erro 404</p><h1>Esta página não foi encontrada.</h1><p>O endereço pode ter mudado ou ainda não fazer parte da experiência pública.</p><div className="button-row"><Link className="button button-primary" href="/">Voltar ao início</Link><Link className="button button-secondary" href="/recursos">Explorar recursos</Link></div></div></main><SiteFooter/></>}

@@ -180,3 +180,7 @@ Nenhum desses arquivos foi criado nesta etapa. A página deve operar sem backend
 - `docs/design/referencias/publico-home-desktop.png`
 - `docs/tecnica/arquitetura.md`
 - `docs/fluxo-de-trabalho.md`
+
+## Nota de evolução de escopo — 27/09/2026
+
+O escopo inicial exclusivo da home foi superado por autorização posterior. A área pública agora também possui Recursos, Segurança, Planos, FAQ, Contato e documentos legais preliminares. As restrições históricas desta versão permanecem como registro do primeiro marco.

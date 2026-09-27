@@ -1,3 +1,4 @@
+import { faqCategories } from "@/lib/public-site";
 import { ArrowIcon, CheckIcon, DocumentIcon, LockIcon } from "./icons";
 import { ProductPreview } from "./product-preview";
 
@@ -156,18 +157,13 @@ export function SecuritySection() {
 }
 
 export function FaqSection() {
-  const questions = [
-    ["A plataforma é indicada para quais escritórios?", "Para escritórios pequenos e médios que querem organizar casos, documentos, prazos e rotinas da equipe."],
-    ["O cliente terá acesso a todas as informações do caso?", "Não. O escritório controla o que é publicado; o cliente vê apenas o conteúdo liberado para ele."],
-    ["A plataforma promete um resultado jurídico?", "Não. O JurisVia apoia a organização e a comunicação do escritório; não substitui a atuação profissional nem garante resultados."],
-    ["Esta demonstração representa um sistema já disponível?", "Não. Ela apresenta a direção planejada do produto com dados fictícios. Recursos serão validados antes de serem oferecidos."],
-  ];
+  const questions = faqCategories[0].items;
   return (
     <section id="duvidas" className="faq section anchor-target" aria-labelledby="faq-title" tabIndex={-1}>
       <div className="container faq-grid">
         <div className="section-intro sticky-intro"><p className="eyebrow">Dúvidas frequentes</p><h2 id="faq-title">Respostas diretas sobre a proposta.</h2><p>O escopo desta página apresenta a direção do produto, sem preços, cadastro ou promessa de disponibilidade.</p></div>
         <div className="faq-list">
-          {questions.map(([question, answer]) => (
+          {questions.map(({ question, answer }) => (
             <details key={question}><summary>{question}<span aria-hidden="true">+</span></summary><p>{answer}</p></details>
           ))}
         </div>

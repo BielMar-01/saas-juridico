@@ -1,3 +1,5 @@
+import {PageJsonLd} from "@/components/public/page-json-ld";
+import { pageMetadata } from "@/lib/seo";
 import {
   ClaritySection,
   FaqSection,
@@ -11,6 +13,8 @@ import {
 import { SiteFooter } from "@/components/public/site-footer";
 import { SectionReveals } from "@/components/public/section-reveals";
 import { SiteHeader } from "@/components/public/site-header";
+
+export const metadata = pageMetadata("Gestão jurídica com clareza", "Uma proposta para organizar a rotina do escritório e deixar cada próximo passo claro.", "/");
 
 export default function Home() {
   return (
@@ -29,7 +33,7 @@ export default function Home() {
         <FaqSection />
         <FinalCtaSection />
       </main>
-      <SiteFooter />
+      <PageJsonLd name="Gestão jurídica com clareza" description="Proposta pública do JurisVia." path="/"/><SiteFooter />
     </>
   );
 }

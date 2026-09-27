@@ -1,0 +1,1 @@
+import {safeJsonLd,webpageJsonLd} from "@/lib/seo";export function PageJsonLd({name,description,path}:{name:string;description:string;path:string}){return <script type="application/ld+json" dangerouslySetInnerHTML={{__html:safeJsonLd(webpageJsonLd(name,description,path))}}/>}

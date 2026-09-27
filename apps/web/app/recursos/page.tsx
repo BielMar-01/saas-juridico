@@ -1,27 +1,2 @@
-import type { Metadata } from "next";
-import { ResourcesPage } from "@/components/public/resources-page";
-import { SectionReveals } from "@/components/public/section-reveals";
-import { SiteFooter } from "@/components/public/site-footer";
-import { SiteHeader } from "@/components/public/site-header";
-
-export const metadata: Metadata = {
-  title: "Recursos planejados | JurisVia",
-  description: "Conheça a visão planejada para organizar clientes, casos, processos, documentos, prazos, equipe e comunicação com o cliente.",
-  openGraph: {
-    title: "Recursos planejados | JurisVia",
-    description: "Uma visão planejada da gestão jurídica com clareza e controle.",
-    type: "website",
-    locale: "pt_BR",
-  },
-};
-
-export default function Recursos() {
-  return (
-    <>
-      <a className="skip-link" href="#conteudo">Pular para o conteúdo</a>
-      <SiteHeader />
-      <main id="conteudo" tabIndex={-1}><SectionReveals /><ResourcesPage /></main>
-      <SiteFooter />
-    </>
-  );
-}
+import {PageJsonLd} from "@/components/public/page-json-ld";
+import {ResourcesPage} from "@/components/public/resources-page";import {SectionReveals} from "@/components/public/section-reveals";import {SiteFooter} from "@/components/public/site-footer";import {SiteHeader} from "@/components/public/site-header";import {pageMetadata} from "@/lib/seo";export const metadata=pageMetadata("Recursos planejados","Conheça a visão planejada para organizar clientes, casos, processos, documentos, prazos, equipe e comunicação com o cliente.","/recursos");export default function Page(){return <><a className="skip-link" href="#conteudo">Pular para o conteúdo</a><SiteHeader/><main id="conteudo" tabIndex={-1}><SectionReveals/><ResourcesPage/></main><PageJsonLd name="Recursos planejados" description="Visão planejada dos recursos." path="/recursos"/><SiteFooter/></>}

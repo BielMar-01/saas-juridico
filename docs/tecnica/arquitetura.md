@@ -162,3 +162,7 @@ Nome, logo e telas permanecem sujeitos a escolha e aprovação.
 7. Destino, consentimento e proteção contra abuso do formulário público.
 
 Essas decisões serão registradas antes dos blocos correspondentes. Elas não impedem organizar as fontes nem iniciar posteriormente o site público.
+
+## Rotas públicas e SEO — 27/09/2026
+
+A camada web inclui as rotas estáticas `/`, `/recursos`, `/seguranca`, `/planos`, `/faq`, `/contato`, `/privacidade` e `/termos`, além de 404, sitemap, robots e manifest. Esta entrega não adiciona API, persistência, autenticação ou envio de formulário.

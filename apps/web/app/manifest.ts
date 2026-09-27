@@ -1,0 +1,1 @@
+import type {MetadataRoute} from "next";export default function manifest():MetadataRoute.Manifest{return {name:"JurisVia",short_name:"JurisVia",description:"Gestão jurídica com clareza.",start_url:"/",display:"browser",background_color:"#f5f7fa",theme_color:"#102a43",lang:"pt-BR",icons:[{src:"/icon.svg",sizes:"any",type:"image/svg+xml"}]}}

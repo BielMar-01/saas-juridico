@@ -492,3 +492,7 @@ Guia orientativo sobre segurança da informação para agentes de tratamento de 
 Provimento nº 205 de 2021 sobre publicidade e informação da advocacia. Conselho Federal da OAB. https://www.oab.org.br/util/print?numero=205%2F2021&origem=Provimentos&print=Legislacao
 
 API Pública do DataJud. Conselho Nacional de Justiça. https://datajud-wiki.cnj.jus.br/api-publica/
+
+## Registro de validação comercial — 27/09/2026
+
+A página pública pode apresentar Essencial, Profissional e Escritório com preços e limites estritamente fictícios para demonstração. A composição comercial definitiva continua pendente de entrevistas e validação; esta decisão não substitui o histórico de hipóteses acima.

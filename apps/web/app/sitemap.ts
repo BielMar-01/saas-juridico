@@ -1,0 +1,1 @@
+import type {MetadataRoute} from "next";import {siteUrl} from "@/lib/seo";const paths=["","/recursos","/seguranca","/planos","/contato","/faq"];export default function sitemap():MetadataRoute.Sitemap{return paths.map(path=>({url:`${siteUrl}${path}`,lastModified:new Date("2026-09-27"),changeFrequency:"monthly",priority:path===""?1:.8}))}

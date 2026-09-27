@@ -29,3 +29,7 @@
 - Revisar este pacote de fontes no VS Code.
 - Marcar em `docs/design/decisoes.md` quais artes estão aprovadas.
 - Somente depois autorizar o bootstrap do monorepo.
+
+- Submeter Termos de Uso e Privacidade à revisão jurídica antes do lançamento comercial.
+- Confirmar entidade responsável, canal institucional, encarregado, legislação e foro.
+- Validar oferta, preços e limites dos três planos demonstrativos.

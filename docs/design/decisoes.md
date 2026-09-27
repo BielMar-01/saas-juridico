@@ -40,3 +40,7 @@
 ## Regra para implementação
 
 As imagens em `referencias/` orientam composição e linguagem visual. Elas não autorizam copiar preços, métricas, nomes de pessoas ou dados de processo como conteúdo definitivo.
+
+## Evolução da área pública — 27/09/2026
+
+A navegação pública passa a incluir Recursos, Segurança, Planos, FAQ e Contato. Os planos e preços exibidos são referências fictícias, sempre acompanhadas do aviso de demonstração. Termos e Privacidade são versões preliminares sujeitas a revisão jurídica.

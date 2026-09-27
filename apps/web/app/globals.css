@@ -570,3 +570,37 @@ svg { flex: 0 0 auto; }
   .field-meta { align-items: flex-end; flex-direction: column; gap: 4px; }
   .form-actions, .form-actions .button { width: 100%; }
 }
+.footer-navigation{display:grid;grid-template-columns:auto auto;gap:48px}.footer-legal{align-content:start}.footer-legal span{display:flex;min-height:44px;align-items:center;gap:8px;color:#cbd8e2}.footer-legal small{color:#8299ad}
+.plans-hero,.faq-page-hero{padding-block:100px;border-bottom:1px solid var(--border)}.plans-hero-inner,.faq-page-hero .container{max-width:950px}.plans-hero h1,.faq-page-hero h1{margin:0;font:600 clamp(3rem,6vw,5.3rem)/.99 var(--font-serif);letter-spacing:-.04em}.plans-hero-inner>p:not(.eyebrow),.faq-page-hero .container>p:not(.eyebrow){max-width:760px;color:var(--muted);font-size:1.1rem;line-height:1.7}.pricing-notice{padding:16px 18px;border-left:3px solid var(--teal);background:var(--teal-soft);color:var(--foreground)!important;font-size:.88rem!important;line-height:1.55!important}.plans-section,.plan-comparison,.plans-faq,.faq-catalog{padding-block:100px}.plans-heading{max-width:760px;margin-bottom:52px}.plans-heading h2,.plan-comparison h2,.plans-faq h2,.faq-category h2{margin:0;font:600 clamp(2.2rem,4vw,3.5rem)/1.08 var(--font-serif)}.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}.plan-card{display:flex;min-width:0;flex-direction:column;padding:32px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}.plan-featured{border:2px solid var(--accent);box-shadow:var(--shadow)}.plan-card h3{margin:0;font:600 2rem/1.1 var(--font-serif)}.plan-card>div>p{min-height:52px;color:var(--muted)}.plan-price strong{font:600 2.6rem/1 var(--font-serif)}.plan-price span{color:var(--muted)}.plan-limits,.plan-features{display:grid;gap:10px;padding:20px 0;border-top:1px solid var(--border);list-style:none}.plan-features{flex:1}.plan-features li{display:flex;gap:8px}.plan-features svg{width:18px;color:var(--teal)}.plan-card .button{width:100%}.plans-notice-bottom{max-width:760px;margin:34px auto 0}.plan-comparison{background:var(--surface-subtle)}.comparison-desktop{margin-top:38px;border:1px solid var(--border);background:var(--surface)}.comparison-mobile{display:none}.faq-category{display:grid;grid-template-columns:minmax(220px,.65fr) minmax(0,1.35fr);gap:70px;padding-block:54px;border-top:1px solid var(--border)}.faq-category:last-child{border-bottom:1px solid var(--border)}
+@media(max-width:1100px){.desktop-nav{display:none}.menu-button{display:grid}}
+@media(max-width:900px){.plans-grid{grid-template-columns:1fr}.plan-card>div>p{min-height:0}.footer-navigation{grid-template-columns:1fr;gap:20px}.faq-category{grid-template-columns:1fr;gap:24px}.comparison-desktop{display:none}.comparison-mobile{display:grid;gap:14px;margin-top:32px}.comparison-mobile article{padding:22px;border:1px solid var(--border);background:var(--surface)}.comparison-mobile h3{margin-top:0}.comparison-mobile dl div{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:10px 0;border-top:1px solid var(--border)}.comparison-mobile dt{font-weight:700}.comparison-mobile dd{margin:0;color:var(--muted)}}
+@media(max-width:600px){.plans-hero,.faq-page-hero,.plans-section,.plan-comparison,.plans-faq,.faq-catalog{padding-block:70px}.plan-card{padding:24px}.header-demo,.header-primary{display:none}}
+.legal-hero{padding-block:90px;border-bottom:1px solid var(--border)}.legal-hero h1{margin:0;font:600 clamp(3rem,6vw,5rem)/1 var(--font-serif)}.legal-hero>div>p:not(.eyebrow){max-width:780px;color:var(--muted);line-height:1.7}.legal-banner{padding:16px 18px;border-left:3px solid #d97706;background:var(--surface-subtle);color:var(--foreground)!important;font-weight:700}.legal-date{font-size:.85rem}.legal-layout{display:grid;grid-template-columns:260px minmax(0,760px);gap:80px;align-items:start;padding-block:80px}.legal-summary{position:sticky;top:100px;display:grid;gap:4px}.legal-summary strong{margin-bottom:10px}.legal-summary a{display:flex;min-height:40px;align-items:center;color:var(--muted);font-size:.86rem}.legal-summary a:hover{color:var(--accent)}.legal-content section{padding:0 0 46px;scroll-margin-top:100px}.legal-content h2{font:600 clamp(1.7rem,3vw,2.4rem)/1.15 var(--font-serif)}.legal-content p{color:var(--muted);line-height:1.75}.not-found{display:grid;min-height:65vh;align-items:center;padding-block:80px}.not-found h1{max-width:760px;margin:0;font:600 clamp(3rem,7vw,5.5rem)/1 var(--font-serif)}.not-found p{max-width:650px;color:var(--muted);font-size:1.1rem}.footer-legal a{display:flex;min-height:44px;align-items:center;color:#cbd8e2}
+@media(max-width:800px){.legal-layout{grid-template-columns:1fr;gap:42px}.legal-summary{position:static;padding-bottom:30px;border-bottom:1px solid var(--border)}}
+@media(max-width:600px){.legal-hero{padding-block:70px}.legal-layout{padding-block:56px}}
+@media print{.site-header,.site-footer,.legal-summary,.skip-link{display:none!important}.legal-hero,.legal-layout{display:block;padding:0;border:0}.legal-banner{border:1px solid #777}.legal-content section{break-inside:avoid;padding-bottom:18px}body{background:#fff;color:#000}}
+@media (max-width: 600px) {
+  .faq-page-hero h1 {
+    overflow-wrap: anywhere;
+    font-size: clamp(2.35rem, 11vw, 3.15rem);
+  }
+}
+.comparison-desktop {
+  width: 100%;
+  border-collapse: collapse;
+}
+.comparison-desktop th,
+.comparison-desktop td {
+  padding: 18px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.comparison-desktop tr > :last-child { border-right: 0; }
+.comparison-desktop tbody tr:last-child > * { border-bottom: 0; }
+.comparison-desktop thead th {
+  background: var(--navy);
+  color: #fff;
+}
+.comparison-desktop tbody th { font-weight: 700; }
