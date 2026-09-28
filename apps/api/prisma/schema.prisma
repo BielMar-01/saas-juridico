@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  LAWYER
+  ASSISTANT
+  FINANCIAL
+  VIEWER
+}
+
+enum ClientType {
+  INDIVIDUAL
+  LEGAL_ENTITY
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CaseStatus {
+  DRAFT
+  ACTIVE
+  ON_HOLD
+  CLOSED
+  ARCHIVED
+}
+
+enum LawsuitStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum DocumentVisibility {
+  INTERNAL
+  CLIENT_PORTAL
+  RESTRICTED
+}
+
+enum DocumentStatus {
+  REQUESTED
+  UPLOADED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  REPLACED
+  WAIVED
+  QUARANTINED
+}
+
+enum PublicationType {
+  STATUS_UPDATE
+  NEXT_STEP
+  DOCUMENT_REQUEST
+  MESSAGE
+  DOCUMENT
+}
+
+model User {
+  id          String                   @id @default(uuid()) @db.Uuid
+  authUserId  String?                  @unique @map("auth_user_id") @db.Uuid
+  name        String
+  email       String                   @unique
+  status      UserStatus               @default(INVITED)
+  createdAt   DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships OrganizationMembership[]
+
+  @@index([status])
+  @@map("users")
+}
+
+model Organization {
+  id           String                    @id @default(uuid()) @db.Uuid
+  name         String
+  slug         String                    @unique
+  status       OrganizationStatus        @default(ACTIVE)
+  createdAt    DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships  OrganizationMembership[]
+  clients      Client[]
+  cases        Case[]
+  lawsuits     Lawsuit[]
+  tasks        Task[]
+  documents    Document[]
+  publications ClientPortalPublication[]
+  auditLogs    AuditLog[]
+
+  @@index([status])
+  @@map("organizations")
+}
+
+model OrganizationMembership {
+  id                String                    @id @default(uuid()) @db.Uuid
+  organizationId    String                    @map("organization_id") @db.Uuid
+  userId            String                    @map("user_id") @db.Uuid
+  role              OrganizationRole
+  status            MembershipStatus          @default(INVITED)
+  invitedAt         DateTime?                 @map("invited_at") @db.Timestamptz(3)
+  acceptedAt        DateTime?                 @map("accepted_at") @db.Timestamptz(3)
+  createdAt         DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization      Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user              User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  responsibleCases  Case[]                    @relation("CaseResponsibleMembership")
+  assignedTasks     Task[]                    @relation("TaskAssigneeMembership")
+  uploadedDocuments Document[]                @relation("DocumentUploaderMembership")
+  publications      ClientPortalPublication[] @relation("PublicationCreatorMembership")
+  auditLogs         AuditLog[]                @relation("AuditActorMembership")
+
+  @@unique([organizationId, userId])
+  @@index([organizationId, status])
+  @@index([userId, status])
+  @@map("organization_memberships")
+}
+
+model Client {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  type           ClientType
+  name           String
+  document       String?
+  email          String?
+  phone          String?
+  status         ClientStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  cases          Case[]
+  documents      Document[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, status])
+  @@index([organizationId, name])
+  @@index([organizationId, document])
+  @@index([organizationId, deletedAt])
+  @@map("clients")
+}
+
+model Case {
+  id                String                    @id @default(uuid()) @db.Uuid
+  organizationId    String                    @map("organization_id") @db.Uuid
+  clientId          String                    @map("client_id") @db.Uuid
+  title             String
+  description       String?
+  status            CaseStatus                @default(DRAFT)
+  responsibleUserId String?                   @map("responsible_user_id") @db.Uuid
+  readinessScore    Int?                      @map("readiness_score") @db.SmallInt
+  createdAt         DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt         DateTime?                 @map("deleted_at") @db.Timestamptz(3)
+  organization      Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  client            Client                    @relation(fields: [organizationId, clientId], references: [organizationId, id], onDelete: Restrict)
+  responsibleMember OrganizationMembership?   @relation("CaseResponsibleMembership", fields: [organizationId, responsibleUserId], references: [organizationId, userId], onDelete: Restrict)
+  lawsuits          Lawsuit[]
+  tasks             Task[]
+  documents         Document[]
+  publications      ClientPortalPublication[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, status])
+  @@index([organizationId, clientId])
+  @@index([organizationId, responsibleUserId])
+  @@index([organizationId, deletedAt])
+  @@map("cases")
+}
+
+model Lawsuit {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  caseId         String        @map("case_id") @db.Uuid
+  caseNumber     String        @map("case_number")
+  court          String?
+  jurisdiction   String?
+  status         LawsuitStatus @default(ACTIVE)
+  filedAt        DateTime?     @map("filed_at") @db.Date
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?     @map("deleted_at") @db.Timestamptz(3)
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  case           Case          @relation(fields: [organizationId, caseId], references: [organizationId, id], onDelete: Restrict)
+
+  @@unique([organizationId, caseNumber])
+  @@index([organizationId, caseId])
+  @@index([organizationId, status])
+  @@index([organizationId, deletedAt])
+  @@map("lawsuits")
+}
+
+model Task {
+  id               String                  @id @default(uuid()) @db.Uuid
+  organizationId   String                  @map("organization_id") @db.Uuid
+  caseId           String?                 @map("case_id") @db.Uuid
+  assignedToUserId String?                 @map("assigned_to_user_id") @db.Uuid
+  title            String
+  description      String?
+  status           TaskStatus              @default(PENDING)
+  priority         TaskPriority            @default(MEDIUM)
+  dueAt            DateTime?               @map("due_at") @db.Timestamptz(3)
+  completedAt      DateTime?               @map("completed_at") @db.Timestamptz(3)
+  createdAt        DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt        DateTime?               @map("deleted_at") @db.Timestamptz(3)
+  organization     Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  case             Case?                   @relation(fields: [organizationId, caseId], references: [organizationId, id], onDelete: Restrict)
+  assignedMember   OrganizationMembership? @relation("TaskAssigneeMembership", fields: [organizationId, assignedToUserId], references: [organizationId, userId], onDelete: Restrict)
+
+  @@index([organizationId, status, dueAt])
+  @@index([organizationId, caseId])
+  @@index([organizationId, assignedToUserId, status])
+  @@index([organizationId, deletedAt])
+  @@map("tasks")
+}
+
+model Document {
+  id               String                 @id @default(uuid()) @db.Uuid
+  organizationId   String                 @map("organization_id") @db.Uuid
+  caseId           String?                @map("case_id") @db.Uuid
+  clientId         String?                @map("client_id") @db.Uuid
+  uploadedByUserId String                 @map("uploaded_by_user_id") @db.Uuid
+  name             String
+  storagePath      String                 @map("storage_path")
+  mimeType         String                 @map("mime_type")
+  size             BigInt
+  visibility       DocumentVisibility     @default(INTERNAL)
+  status           DocumentStatus         @default(QUARANTINED)
+  createdAt        DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt        DateTime?              @map("deleted_at") @db.Timestamptz(3)
+  organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  case             Case?                  @relation(fields: [organizationId, caseId], references: [organizationId, id], onDelete: Restrict)
+  client           Client?                @relation(fields: [organizationId, clientId], references: [organizationId, id], onDelete: Restrict)
+  uploadedByMember OrganizationMembership @relation("DocumentUploaderMembership", fields: [organizationId, uploadedByUserId], references: [organizationId, userId], onDelete: Restrict)
+
+  @@unique([organizationId, storagePath])
+  @@index([organizationId, status])
+  @@index([organizationId, caseId])
+  @@index([organizationId, clientId])
+  @@index([organizationId, deletedAt])
+  @@map("documents")
+}
+
+model ClientPortalPublication {
+  id              String                 @id @default(uuid()) @db.Uuid
+  organizationId  String                 @map("organization_id") @db.Uuid
+  caseId          String                 @map("case_id") @db.Uuid
+  createdByUserId String                 @map("created_by_user_id") @db.Uuid
+  type            PublicationType
+  title           String
+  content         String
+  publishedAt     DateTime               @map("published_at") @db.Timestamptz(3)
+  revokedAt       DateTime?              @map("revoked_at") @db.Timestamptz(3)
+  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization    Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  case            Case                   @relation(fields: [organizationId, caseId], references: [organizationId, id], onDelete: Restrict)
+  createdByMember OrganizationMembership @relation("PublicationCreatorMembership", fields: [organizationId, createdByUserId], references: [organizationId, userId], onDelete: Restrict)
+
+  @@index([organizationId, caseId, publishedAt])
+  @@index([organizationId, revokedAt])
+  @@map("client_portal_publications")
+}
+
+model AuditLog {
+  id              String                  @id @default(uuid()) @db.Uuid
+  organizationId  String                  @map("organization_id") @db.Uuid
+  userId          String?                 @map("user_id") @db.Uuid
+  action          String
+  entityType      String                  @map("entity_type")
+  entityId        String?                 @map("entity_id") @db.Uuid
+  metadata        Json?
+  ipAddress       String?                 @map("ip_address") @db.Inet
+  userAgent       String?                 @map("user_agent")
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actorMembership OrganizationMembership? @relation("AuditActorMembership", fields: [organizationId, userId], references: [organizationId, userId], onDelete: Restrict)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, entityType, entityId])
+  @@index([organizationId, userId, createdAt])
+  @@map("audit_logs")
+}

@@ -52,9 +52,13 @@ Se QA ou revisão encontrar problema, retornar ao responsável pela implementaç
 O bootstrap do monorepo foi concluído. Os comandos disponíveis na raiz são:
 
 - `pnpm install` — instala as dependências do workspace.
-- `pnpm dev` — inicia a aplicação web em desenvolvimento.
-- `pnpm lint` — executa o lint dos pacotes.
-- `pnpm typecheck` — gera os tipos do Next.js e valida o TypeScript.
-- `pnpm build` — gera o build de produção.
-
-Ainda não existe comando de teste automatizado.
+- `pnpm dev` — inicia web e API em desenvolvimento; exige as variáveis obrigatórias da API.
+- `pnpm dev:web` — inicia somente a aplicação web.
+- `pnpm dev:api` — inicia somente a API.
+- `pnpm lint` — executa o lint de todos os pacotes.
+- `pnpm typecheck` — gera os tipos do Next.js e valida o TypeScript de web e API.
+- `pnpm test` — executa os testes automatizados disponíveis; atualmente são 15 testes em 4 arquivos da API.
+- `pnpm build` — gera os builds de produção de web e API.
+- `pnpm start` — gera os builds necessários e inicia web e API via Turborepo; exige as variáveis obrigatórias da API.
+- `pnpm start:web` — inicia somente o build da web.
+- `pnpm start:api` — inicia somente o build da API.

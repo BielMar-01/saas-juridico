@@ -1,7 +1,7 @@
 # Arquitetura técnica do SaaS jurídico
 
 Versão 0.1 - 25/09/2026  
-Estado: proposta inicial; nenhuma aplicação, banco ou serviço externo foi provisionado.
+Estado: fundação web e API implementada; PostgreSQL de desenvolvimento provisionado com a migration `init_foundation`, sem dados de domínio.
 
 ## 1 Escopo e ordem
 
@@ -166,3 +166,7 @@ Essas decisões serão registradas antes dos blocos correspondentes. Elas não i
 ## Rotas públicas e SEO — 27/09/2026
 
 A camada web inclui as rotas estáticas `/`, `/recursos`, `/seguranca`, `/planos`, `/faq`, `/contato`, `/privacidade` e `/termos`, além de 404, sitemap, robots e manifest. Esta entrega não adiciona API, persistência, autenticação ou envio de formulário.
+
+## Fundação local da API — 27/09/2026
+
+`apps/api` contém Fastify, Zod e Prisma com PostgreSQL, health checks e documentação OpenAPI. A modelagem multi-tenant está em `modelo-de-dados.md`. O PostgreSQL de desenvolvimento recebeu a migration `init_foundation`, sem dados de aplicação ou seed. Supabase Auth, Storage, RLS e o deploy da API continuam não configurados; consulte `ambiente-e-supabase.md` e `migrations.md`.

@@ -1,6 +1,6 @@
 # SaaS jurídico
 
-Monorepo do SaaS para escritórios de advocacia brasileiros. Nesta etapa, o repositório contém a fundação técnica, a primeira versão da home pública e uma reserva documental para a futura API.
+Monorepo do SaaS para escritórios de advocacia brasileiros. O repositório contém a área pública e a fundação local da API Fastify com modelagem Prisma multi-tenant.
 
 O nome `JurisVia` é provisório. A marca definitiva ainda depende de validação.
 
@@ -21,13 +21,13 @@ pnpm install
 
 ## Desenvolvimento
 
-Para iniciar a aplicação web:
+Para iniciar somente a aplicação web:
 
 ```bash
-pnpm dev
+pnpm dev:web
 ```
 
-Depois, acesse `http://localhost:3000`.
+Para iniciar somente a API, use `pnpm dev:api`. O comando `pnpm dev` inicia web e API e, por isso, exige as variáveis obrigatórias da API. A web fica em `http://localhost:3000` e a API usa `http://127.0.0.1:3333` por padrão.
 
 ## Verificações
 
@@ -40,7 +40,7 @@ pnpm build
 ## Estrutura
 
 - `apps/web`: aplicação Next.js com React, TypeScript e Tailwind CSS.
-- `apps/api`: espaço reservado para a API futura; não contém backend nesta etapa.
+- `apps/api`: fundação da API Fastify, health checks, OpenAPI, testes e schema Prisma.
 - `docs`: fontes de produto, design e arquitetura.
 - `.codex`: configuração dos agentes do projeto.
 
@@ -53,4 +53,8 @@ pnpm build
 - [`docs/tecnica/arquitetura.md`](docs/tecnica/arquitetura.md): arquitetura proposta e marcos técnicos.
 - [`docs/fluxo-de-trabalho.md`](docs/fluxo-de-trabalho.md): ordem dos agentes e critérios de passagem.
 
-Banco, autenticação, API, GitHub e Vercel ainda não estão configurados.
+A web está publicada. O PostgreSQL de desenvolvimento no Supabase está configurado e recebeu a migration `init_foundation`. Supabase Auth, Storage, RLS e o deploy da API ainda não foram configurados.
+
+## API
+
+A API Fastify fica em `apps/api`. Use `pnpm dev:web` ou `pnpm dev:api` para desenvolvimento isolado. Após `pnpm build`, use `pnpm start:web` ou `pnpm start:api` para iniciar apenas um app; `pnpm start` inicia os dois pacotes via Turborepo e exige as variáveis da API. Sem definir `PORT`, a web usa `3000` e a API usa `3333`; um `PORT` compartilhado deve ser evitado no comando conjunto. `pnpm test` executa os testes disponíveis. Consulte `apps/api/README.md`, `docs/tecnica/modelo-de-dados.md` e `docs/tecnica/ambiente-e-supabase.md`.
