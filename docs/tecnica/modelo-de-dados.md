@@ -1,10 +1,10 @@
 # Modelo inicial de dados
 
-Estado: schema Prisma validado e migration `init_foundation` aplicada no banco de desenvolvimento, sem dados de aplicação ou seed.
+Estado: schema Prisma validado e quatro migrations de fundação e hardening aplicadas no banco de desenvolvimento, sem dados de aplicação ou seed.
 
 ## Estratégia
 
-`Organization` é o limite de tenant. Toda entidade de domínio possui `organizationId`, inclusive vínculos que também poderiam inferi-lo. Consultas futuras deverão receber o tenant validado pela API; filtros do navegador não constituem isolamento. RLS será uma defesa adicional depois que identidade e policies tiverem testes de não vazamento.
+`Organization` é o limite de tenant. Toda entidade de domínio possui `organizationId`, inclusive vínculos que também poderiam inferi-lo. Consultas de domínio recebem o tenant validado pela API dentro de transação; filtros do navegador não constituem isolamento. RLS forçada já protege o banco e possui testes positivos e negativos de não vazamento.
 
 ```mermaid
 erDiagram
@@ -33,8 +33,8 @@ Relações essenciais usam `Restrict` e nenhuma cascata destrutiva foi definida.
 
 Unicidades: slug da organização, identidade Auth e e-mail do usuário, membership por organização/usuário, número processual por organização e caminho de Storage por organização. Índices começam por `organizationId` nas consultas de tenant e cobrem status, responsáveis, cliente/caso, vencimento, exclusão lógica e ordem de auditoria.
 
-Os enums são deliberadamente conservadores. Estados documentais cobrem o fluxo da RN 014 e `QUARANTINED` prepara a RN 017. Papéis apenas preparam o modelo; não implementam autorização. A coerência entre `Document.clientId` e o cliente do `Case` associado não é expressável apenas pelas relações Prisma e exigirá trigger ou regra transacional revisada. As regras “ao menos um proprietário ativo”, “ao menos um responsável por caso ativo”, limites de `readinessScore`, histórico/versionamento de publicação e imutabilidade forte de `AuditLog` também exigem constraints, triggers ou regras de domínio na migration revisada. Essas garantias não fazem parte de `init_foundation`; deverão entrar apenas em migrations ou regras de domínio futuras, com SQL e comportamento revisados antes da aplicação.
+Os enums são deliberadamente conservadores. Estados documentais cobrem o fluxo da RN 014 e `QUARANTINED` prepara a RN 017. Papéis apenas preparam o modelo; não implementam autorização. A migration `add_multi_tenant_rls` complementa as relações Prisma com triggers e constraints para coerência documento/caso/cliente, proprietário ativo mínimo, atores ativos, limites de `readinessScore`, histórico de publicação e imutabilidade de `AuditLog`. O modelo de papéis ainda não implementa RBAC na API.
 
 ## Dados sensíveis e riscos
 
-Documento pessoal, contato, conteúdo jurídico, metadados de arquivo, IP e user agent são sensíveis. Não existem seeds. Antes de dados reais: definir retenção, criptografia aplicável, policies RLS, Auth, autorização por caso, trilha de versões, Storage privado, varredura de uploads e testes entre tenants.
+Documento pessoal, contato, conteúdo jurídico, metadados de arquivo, IP e user agent são sensíveis. Não existem seeds. Antes de dados reais: definir retenção, criptografia aplicável, Auth, autorização por caso, Storage privado e varredura de uploads. Policies RLS e testes entre tenants já estão ativos.

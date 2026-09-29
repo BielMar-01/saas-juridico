@@ -53,7 +53,7 @@ pnpm build
 - [`docs/tecnica/arquitetura.md`](docs/tecnica/arquitetura.md): arquitetura proposta e marcos técnicos.
 - [`docs/fluxo-de-trabalho.md`](docs/fluxo-de-trabalho.md): ordem dos agentes e critérios de passagem.
 
-A web está publicada. O PostgreSQL de desenvolvimento no Supabase está configurado e recebeu a migration `init_foundation`. Supabase Auth, Storage, RLS e o deploy da API ainda não foram configurados.
+A web está publicada. O PostgreSQL de desenvolvimento recebeu quatro migrations até `harden_soft_delete_and_actor_provenance`; o papel runtime, RLS e grants mínimos estão configurados. Supabase Auth, Storage e o deploy da API ainda não foram configurados.
 
 ## API
 

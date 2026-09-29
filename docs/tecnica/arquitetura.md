@@ -1,7 +1,7 @@
 # Arquitetura técnica do SaaS jurídico
 
 Versão 0.1 - 25/09/2026  
-Estado: fundação web e API implementada; PostgreSQL de desenvolvimento provisionado com a migration `init_foundation`, sem dados de domínio.
+Estado: fundação web e API implementada; PostgreSQL de desenvolvimento provisionado com quatro migrations até `harden_soft_delete_and_actor_provenance`, sem dados de domínio.
 
 ## 1 Escopo e ordem
 
@@ -40,7 +40,7 @@ flowchart TD
 
 A web usa o login do Supabase Auth. A API verifica a identidade recebida e aplica autorização por escritório, função e escopo do caso. O navegador não recebe credenciais privilegiadas do Supabase e não acessa documentos privados diretamente sem permissão verificada.
 
-Na primeira versão, toda operação autenticada de domínio passa pela API. Consultas diretas do navegador ao Postgres não fazem parte do contrato. RLS será uma camada adicional a projetar e testar; não substitui a autorização da API.
+Na primeira versão, toda operação autenticada de domínio passa pela API. Consultas diretas do navegador ao Postgres não fazem parte do contrato. RLS forçada é uma camada adicional já implementada e testada; não substitui a futura autorização da API.
 
 ## 4 Estrutura planejada
 
@@ -156,7 +156,7 @@ Nome, logo e telas permanecem sujeitos a escolha e aprovação.
 1. Nome de trabalho e identidade final.
 2. Artes que representam a direção aprovada.
 3. Estratégia de sessão entre Next.js, Supabase Auth e Fastify.
-4. Modelo de autorização e RLS.
+4. Integração de Auth e modelo de autorização sobre a RLS existente.
 5. Estratégia segura de upload e verificação de arquivos.
 6. Adequação da API Fastify na Vercel.
 7. Destino, consentimento e proteção contra abuso do formulário público.
@@ -169,4 +169,4 @@ A camada web inclui as rotas estáticas `/`, `/recursos`, `/seguranca`, `/planos
 
 ## Fundação local da API — 27/09/2026
 
-`apps/api` contém Fastify, Zod e Prisma com PostgreSQL, health checks e documentação OpenAPI. A modelagem multi-tenant está em `modelo-de-dados.md`. O PostgreSQL de desenvolvimento recebeu a migration `init_foundation`, sem dados de aplicação ou seed. Supabase Auth, Storage, RLS e o deploy da API continuam não configurados; consulte `ambiente-e-supabase.md` e `migrations.md`.
+`apps/api` contém Fastify, Zod e Prisma com PostgreSQL, health checks e documentação OpenAPI. A modelagem multi-tenant está em `modelo-de-dados.md`. O PostgreSQL de desenvolvimento recebeu quatro migrations até `harden_soft_delete_and_actor_provenance`, sem dados de aplicação ou seed. O papel runtime, RLS forçada, policies e grants mínimos estão configurados. Supabase Auth, Storage e o deploy da API continuam não configurados; consulte `ambiente-e-supabase.md` e `migrations.md`.

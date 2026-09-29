@@ -1,6 +1,6 @@
 # Ambiente, Supabase e evolução da API
 
-O banco PostgreSQL de desenvolvimento foi conectado e recebeu apenas a migration `init_foundation`. Auth, Storage e RLS continuam não configurados.
+O banco PostgreSQL de desenvolvimento recebeu quatro migrations: `init_foundation`, `add_multi_tenant_rls`, `harden_active_ownership_and_runtime_grants` e `harden_soft_delete_and_actor_provenance`. RLS, o papel runtime e grants mínimos estão configurados; Auth e Storage continuam não configurados.
 
 ## Variáveis
 
@@ -10,9 +10,9 @@ No Supabase, a aplicação deverá preferir o pooler compatível com conexões c
 
 ## Estado do ambiente de desenvolvimento
 
-O projeto PostgreSQL de desenvolvimento e o arquivo local `apps/api/.env` já foram configurados. As conexões de runtime e migration foram validadas sem expor valores, e `init_foundation` foi aplicada pelo Prisma. O banco permanece sem dados de aplicação e sem seed. Não criar tabelas manualmente, resetar o banco ou aplicar migrations em ambiente desconhecido.
+O projeto PostgreSQL de desenvolvimento e o arquivo local `apps/api/.env` já foram configurados. As conexões administrativa e runtime foram validadas sem expor valores. As quatro migrations foram aplicadas pelo Prisma, e o banco permanece sem dados de aplicação ou seed. Não criar tabelas manualmente, resetar o banco ou aplicar migrations em ambiente desconhecido.
 
-Auth, usuários, buckets e policies não foram criados. A próxima fase deve projetar claims/sessão, RLS alinhada ao `organization_id`, Storage privado com URLs temporárias e testes positivos e negativos entre tenants.
+Auth, identidades externas e buckets não foram criados. Policies de banco e testes entre tenants já protegem as tabelas de negócio. A próxima fase deve projetar claims/sessão e Storage privado sem enfraquecer o contexto transacional existente.
 
 ## Bind de rede local
 
@@ -26,12 +26,12 @@ A implementação corrente abre uma porta com Fastify, mantém um processo Node.
 
 Antes da publicação, devem estar definidos e validados:
 
-- `DATABASE_URL` com o pooler do Supabase apropriado ao runtime, SSL, limite pequeno de conexões por instância e timeouts;
-- `DIRECT_URL` restrita ao processo separado de migrations, sem executar migrations durante build, inicialização ou deploy concorrente;
+- `DATABASE_URL` autenticada exclusivamente como o papel runtime `jurisvia_app`, usando o pooler do Supabase apropriado ao runtime, SSL, limite pequeno de conexões por instância e timeouts;
+- `DIRECT_URL` com credencial administrativa restrita a um job separado de migrations, sem disponibilizá-la ao processo da API e sem executar migrations durante build, inicialização ou deploy concorrente;
 - `NODE_ENV`, `LOG_LEVEL`, `WEB_ORIGIN`, `HOST` e `PORT` de acordo com o serviço, sem compartilhar segredos com a web;
 - liveness em `/api/v1/health` e readiness do banco em `/api/v1/health/database`, com frequência que não sobrecarregue o PostgreSQL;
 - migrations revisadas e aplicadas por uma etapa única, com backup e rollback operacional definidos;
-- RLS, claims, autorização por `organization_id` e testes positivos e negativos entre escritórios antes de receber dados reais;
+- integração de Auth e claims com o contexto RLS já implementado, preservando os testes positivos e negativos entre escritórios;
 - rate limit com armazenamento compartilhado quando houver mais de uma instância, pois o armazenamento em memória não é global;
 - proxy confiável e origem real do cliente validados antes de usar IP em auditoria ou limitação de requisições;
 - documentação Swagger desabilitada ou protegida em produção.
