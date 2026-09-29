@@ -1,0 +1,1 @@
+import Link from"next/link";export default function Page(){return <section className="app-page"><p className="eyebrow">Visão geral</p><h1>Área do escritório</h1><p>Esta base autenticada valida sessão, organização e permissões antes de consultar dados.</p><Link className="button button-primary" href="/app/clientes">Acessar clientes</Link></section>}

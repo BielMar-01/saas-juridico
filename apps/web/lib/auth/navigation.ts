@@ -1,0 +1,3 @@
+export function safeNext(value:string|null|undefined,fallback="/app"){if(!value||!value.startsWith("/")||value.startsWith("//")||value.includes("\\")||value.includes("\0"))return fallback;try{const url=new URL(value,"http://local");return url.origin==="http://local"&&url.pathname.startsWith("/")?url.pathname+url.search+url.hash:fallback}catch{return fallback}}
+export function passwordChecks(value:string){return{length:value.length>=12,upper:/[A-Z]/.test(value),lower:/[a-z]/.test(value),number:/\d/.test(value),symbol:/[^A-Za-z0-9]/.test(value)}}
+export function passwordIsStrong(value:string){return Object.values(passwordChecks(value)).every(Boolean)}

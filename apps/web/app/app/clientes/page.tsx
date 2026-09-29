@@ -1,0 +1,1 @@
+import{ClientsPage}from"@/components/app/clients-page";export default function Page(){return <ClientsPage/>}

@@ -1,6 +1,6 @@
 # API JurisVia
 
-Fundação da API de domínio com PostgreSQL de desenvolvimento, quatro migrations aplicadas até `harden_soft_delete_and_actor_provenance`, papel runtime restrito e isolamento multi-tenant testado. Supabase Auth, Storage, CRUD e o deploy da API ainda não foram configurados.
+Fundação da API de domínio com PostgreSQL de desenvolvimento, cinco migrations aplicadas até `add_auth_context_and_client_identity`, papel runtime restrito e isolamento multi-tenant testado. A verificação JWT do Supabase Auth e o CRUD de clientes estão configurados. Storage e o deploy da API ainda não foram configurados.
 
 ## Requisitos e configuração
 
@@ -8,7 +8,7 @@ Use Node.js 24 e pnpm 11. Copie `.env.example` para `.env` local e preencha os v
 
 - `DATABASE_URL`: pooler PostgreSQL para execução da aplicação.
 - `DIRECT_URL`: conexão direta PostgreSQL para migrations.
-- `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` e `SUPABASE_JWKS_URL`: reservadas para fases futuras. A secret key é exclusiva da API.
+- `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` e `SUPABASE_JWKS_URL`: usadas pela integração Auth e por operações administrativas controladas. A secret key é exclusiva de scripts administrativos da API e não pertence ao servidor HTTP nem ao frontend.
 
 ## Comandos
 
@@ -26,7 +26,7 @@ pnpm --filter @saas-juridico/api admin:preflight-migration
 pnpm --filter @saas-juridico/api admin:audit-database-security
 ```
 
-Migrations devem usar `prisma:migrate:dev -- --name <nome>` somente com conexão de desenvolvimento confirmada. As quatro migrations foram revisadas e aplicadas somente no banco de desenvolvimento. Consulte `docs/tecnica/migrations.md`.
+Migrations devem usar `prisma:migrate:dev -- --name <nome>` somente com conexão de desenvolvimento confirmada. As cinco migrations foram revisadas e aplicadas somente no banco de desenvolvimento. Consulte `docs/tecnica/migrations.md`.
 
 ## Endpoints
 
@@ -38,7 +38,7 @@ Sucessos usam `{ data, meta, requestId }`; erros usam `{ error: { code, message,
 
 ## Segurança e próximos passos
 
-CORS aceita apenas `WEB_ORIGIN`; Helmet, limite de requisições, cookies, request ID, logs estruturados com redaction e erros seguros estão configurados. Cookies apenas preparam autenticação futura. RLS e privilégios mínimos estão configurados. Auth, RBAC e Storage privado continuam fora do escopo.
+CORS aceita apenas `WEB_ORIGIN`; Helmet, limite de requisições, cookies, request ID, logs estruturados com redaction e erros seguros estão configurados. Cookies sustentam a sessão web do Supabase Auth. Validação JWT, RLS, privilégios mínimos e a matriz RBAC inicial do CRUD de clientes estão configurados. Gestão completa de equipe, ACL por caso e Storage privado continuam fora do escopo.
 
 ## Isolamento de ambiente no Turborepo
 
@@ -48,4 +48,8 @@ Variáveis de banco e Supabase são encaminhadas somente às tarefas `dev` e `st
 
 Operações de domínio devem usar `withTenant` e o `TransactionClient` do callback. Consulte `docs/tecnica/seguranca-multitenant.md` e `docs/tecnica/migrations.md`. O servidor usa somente `DATABASE_URL`; `DIRECT_URL` é administrativa.
 
-O runtime possui leitura tenant de organizações e memberships, mas não pode inserir, alterar ou excluir essas linhas. Bootstrap e handoff de proprietário são operações administrativas futuras, transacionais e auditadas. A credencial runtime nunca deve aceitar SQL fornecido pelo usuário.
+O runtime possui leitura tenant de organizações e memberships, mas não pode inserir, alterar ou excluir essas linhas. O bootstrap inicial está implementado no script administrativo `admin:bootstrap-organization`, com validação da identidade, transação e auditoria. Handoff de proprietário e demais fluxos de gestão de equipe permanecem futuros e deverão conservar essas garantias. A credencial runtime nunca deve aceitar SQL fornecido pelo usuário.
+
+## Backend autenticado
+
+A API valida JWT assimétrico do Supabase por JWKS e expõe `GET /api/v1/auth/me`, `GET /api/v1/auth/organizations` e o CRUD de clientes em `/api/v1/clients`. Rotas de domínio exigem Bearer token e `X-Organization-Id`, salvo seleção automática quando o usuário possui uma única organização. Swagger UI não é registrado em produção. Consulte `docs/tecnica/backend-auth-clientes.md`.

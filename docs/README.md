@@ -17,7 +17,7 @@ Este diretório contém as fontes que orientam agentes e implementação. O cont
 ## Técnica
 
 - `tecnica/arquitetura.md`: stack, topologia, isolamento e marcos.
-- `tecnica/decisoes/`: ADRs futuros.
+- `tecnica/decisoes/`: ADRs e decisões técnicas registradas.
 - `tecnica/contratos/`: contratos de API quando existirem.
 
 ## Pendências

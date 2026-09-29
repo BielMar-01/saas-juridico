@@ -1,6 +1,6 @@
 # Modelo inicial de dados
 
-Estado: schema Prisma validado e quatro migrations de fundação e hardening aplicadas no banco de desenvolvimento, sem dados de aplicação ou seed.
+Estado: schema Prisma validado e cinco migrations de fundação, hardening e identidade aplicadas no banco de desenvolvimento, sem dados de aplicação ou seed.
 
 ## Estratégia
 
@@ -33,8 +33,8 @@ Relações essenciais usam `Restrict` e nenhuma cascata destrutiva foi definida.
 
 Unicidades: slug da organização, identidade Auth e e-mail do usuário, membership por organização/usuário, número processual por organização e caminho de Storage por organização. Índices começam por `organizationId` nas consultas de tenant e cobrem status, responsáveis, cliente/caso, vencimento, exclusão lógica e ordem de auditoria.
 
-Os enums são deliberadamente conservadores. Estados documentais cobrem o fluxo da RN 014 e `QUARANTINED` prepara a RN 017. Papéis apenas preparam o modelo; não implementam autorização. A migration `add_multi_tenant_rls` complementa as relações Prisma com triggers e constraints para coerência documento/caso/cliente, proprietário ativo mínimo, atores ativos, limites de `readinessScore`, histórico de publicação e imutabilidade de `AuditLog`. O modelo de papéis ainda não implementa RBAC na API.
+Os enums são deliberadamente conservadores. Estados documentais cobrem o fluxo da RN 014 e `QUARANTINED` prepara a RN 017. Os papéis sustentam uma matriz RBAC inicial já aplicada pela API ao CRUD de clientes; `OWNER` e `ADMIN` exigem `aal2` em toda operação tenant. A migration `add_multi_tenant_rls` complementa as relações Prisma com triggers e constraints para coerência documento/caso/cliente, proprietário ativo mínimo, atores ativos, limites de `readinessScore`, histórico de publicação e imutabilidade de `AuditLog`. Gestão completa de equipe e ACL por caso permanecem futuras.
 
 ## Dados sensíveis e riscos
 
-Documento pessoal, contato, conteúdo jurídico, metadados de arquivo, IP e user agent são sensíveis. Não existem seeds. Antes de dados reais: definir retenção, criptografia aplicável, Auth, autorização por caso, Storage privado e varredura de uploads. Policies RLS e testes entre tenants já estão ativos.
+Documento pessoal, contato, conteúdo jurídico, metadados de arquivo, IP e user agent são sensíveis. Não existem seeds. Auth, RBAC inicial, RLS e testes entre tenants estão ativos. Antes de dados reais: definir retenção, criptografia aplicável, ACL por caso e equipe, Storage privado e varredura de uploads.

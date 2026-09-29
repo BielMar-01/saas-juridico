@@ -1,18 +1,18 @@
 # Ambiente, Supabase e evolução da API
 
-O banco PostgreSQL de desenvolvimento recebeu quatro migrations: `init_foundation`, `add_multi_tenant_rls`, `harden_active_ownership_and_runtime_grants` e `harden_soft_delete_and_actor_provenance`. RLS, o papel runtime e grants mínimos estão configurados; Auth e Storage continuam não configurados.
+O ambiente local de desenvolvimento possui cinco migrations até `add_auth_context_and_client_identity`, RLS, papel runtime, grants mínimos, validação JWT e login web com sessão SSR configurados. Storage não foi configurado. Ajustes externos do Dashboard — como políticas de provedores, redirect URLs, MFA e signing keys — e a configuração do ambiente de produção permanecem pendentes de decisão e provisionamento próprios.
 
 ## Variáveis
 
-A API usa `NODE_ENV`, `PORT`, `HOST`, `LOG_LEVEL`, `WEB_ORIGIN`, `DATABASE_URL` e, para Prisma CLI, `DIRECT_URL`. As variáveis `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` e `SUPABASE_JWKS_URL` estão reservadas. `SUPABASE_SECRET_KEY` é exclusiva da API e nunca pode chegar ao frontend. Uma futura integração web poderá usar somente `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; nenhum cliente Supabase foi configurado nesta etapa.
+A API usa `NODE_ENV`, `PORT`, `HOST`, `LOG_LEVEL`, `WEB_ORIGIN`, `DATABASE_URL` e, para Prisma CLI, `DIRECT_URL`. As variáveis `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` e `SUPABASE_JWKS_URL` atendem à validação JWT e aos scripts administrativos controlados. `SUPABASE_SECRET_KEY` é exclusiva da API e nunca pode chegar ao frontend. A integração web usa somente `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; segredos permanecem exclusivos do backend administrativo.
 
 No Supabase, a aplicação deverá preferir o pooler compatível com conexões curtas em `DATABASE_URL`; migrations usam `DIRECT_URL`, que pode ser conexão direta ou Session Pooler compatível em `5432`. Ambas exigem SSL conforme o painel. Nunca registrar URLs completas, pois contêm credenciais.
 
 ## Estado do ambiente de desenvolvimento
 
-O projeto PostgreSQL de desenvolvimento e o arquivo local `apps/api/.env` já foram configurados. As conexões administrativa e runtime foram validadas sem expor valores. As quatro migrations foram aplicadas pelo Prisma, e o banco permanece sem dados de aplicação ou seed. Não criar tabelas manualmente, resetar o banco ou aplicar migrations em ambiente desconhecido.
+O projeto PostgreSQL de desenvolvimento e o arquivo local `apps/api/.env` já foram configurados. As conexões administrativa e runtime foram validadas sem expor valores. As cinco migrations foram aplicadas pelo Prisma, e o banco permanece sem dados de aplicação ou seed. Não criar tabelas manualmente, resetar o banco ou aplicar migrations em ambiente desconhecido.
 
-Auth, identidades externas e buckets não foram criados. Policies de banco e testes entre tenants já protegem as tabelas de negócio. A próxima fase deve projetar claims/sessão e Storage privado sem enfraquecer o contexto transacional existente.
+Auth, sessão e validação de claims foram integrados e validados com fixture efêmera removida ao final. Buckets e Storage ainda não foram configurados. Policies de banco e testes entre tenants protegem as tabelas de negócio.
 
 ## Bind de rede local
 
@@ -35,5 +35,9 @@ Antes da publicação, devem estar definidos e validados:
 - rate limit com armazenamento compartilhado quando houver mais de uma instância, pois o armazenamento em memória não é global;
 - proxy confiável e origem real do cliente validados antes de usar IP em auditoria ou limitação de requisições;
 - documentação Swagger desabilitada ou protegida em produção.
+
+No Dashboard do Supabase, a publicação também exige configurar o Site URL e a allowlist exata de redirect URLs da web, decidir confirmação de e-mail e SMTP, revisar a política de senhas, habilitar e testar TOTP para o gate `aal2` e manter signing keys JWT assimétricas compatíveis com o JWKS consumido pela API. CORS deve aceitar somente a origem pública esperada da web. Essas configurações externas não fazem parte deste repositório.
+
+Enquanto a API separada e suas variáveis de backend não forem publicadas, a área autenticada da web não está disponível em produção. As rotas públicas continuam independentes. A web de produção também precisa apenas das variáveis públicas `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `NEXT_PUBLIC_API_URL`; nenhuma credencial administrativa pode ser exposta ao bundle do navegador.
 
 A publicação depende de health local aprovado, conexão pelo pooler testada, migration de produção controlada e autorização explícita. Nenhum serviço ou variável deve ser provisionado apenas para validar esta estratégia documental.

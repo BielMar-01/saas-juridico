@@ -2,12 +2,13 @@
 
 ## Estado
 
-O banco PostgreSQL de desenvolvimento possui quatro migrations aplicadas, sem seed ou dados de aplicação:
+O banco PostgreSQL de desenvolvimento possui cinco migrations aplicadas, sem seed ou dados de aplicação:
 
 1. `init_foundation`: dez tabelas, treze enums, relações multi-tenant compostas, índices e chaves estrangeiras com `ON DELETE RESTRICT`.
 2. `add_multi_tenant_rls`: papel runtime restrito, RLS forçada, policies explícitas, grants mínimos e invariantes críticos de integridade.
 3. `harden_active_ownership_and_runtime_grants`: responsável obrigatório para casos ativos, guards concorrentes sobre membership/usuário, proprietário efetivamente ativo, ACL de funções privadas e revogação de escrita runtime em organizações e memberships.
 4. `harden_soft_delete_and_actor_provenance`: revoga exclusão física nas entidades com soft delete, vincula autoria runtime ao usuário corrente e torna a autoria documental imutável.
+5. `add_auth_context_and_client_identity`: adiciona a resolução privada do contexto Auth para o papel runtime e a unicidade de documento ativo por organização.
 
 O schema Prisma permanece responsável pela estrutura modelada. SQL nativo versionado implementa RLS, triggers, funções privadas, CHECKs e grants que o Prisma não representa. Não editar migrations aplicadas; toda evolução deve entrar em uma nova migration revisável.
 
@@ -20,7 +21,7 @@ O schema Prisma permanece responsável pela estrutura modelada. SQL nativo versi
 - depois de aplicar, validar `_prisma_migrations`, catálogo RLS/policies/grants, drift estrutural e testes de isolamento;
 - rollback de DDL exige migration compensatória revisada e backup; não apagar registros do histórico.
 
-A migration RLS não configura Supabase Auth, Storage, login, RBAC ou CRUD. O onboarding inicial de organização e primeiro proprietário continua reservado a um fluxo administrativo futuro e auditado.
+A migration `add_multi_tenant_rls`, isoladamente, não configura Auth, Storage, login, RBAC ou CRUD. O estado atual já integra Auth/JWT, login web, uma matriz RBAC inicial, bootstrap administrativo e CRUD de clientes; Storage, ACL completa de equipe/casos e demais módulos continuam fora desta migration e desta etapa.
 
 ## Preflight automatizado
 
@@ -30,6 +31,6 @@ A migration depende de objetos no schema `public` e de um papel global. Reproduz
 
 ## Operações administrativas protegidas
 
-A criação da primeira organização e do primeiro OWNER, assim como handoff de proprietário, não usa a credencial runtime. O fluxo futuro deverá usar conexão administrativa separada, transação única e auditoria. Para handoff, criar ou promover o novo OWNER ativo antes de remover, suspender ou desativar o anterior. Os advisory locks da migration serializam alterações concorrentes. Os triggers continuam ativos para a conexão administrativa; não devem ser desabilitados.
+A criação da primeira organização e do primeiro OWNER, assim como handoff de proprietário, não usa a credencial runtime. O fluxo implementado usa conexão administrativa separada, transação única e auditoria. Para handoff, criar ou promover o novo OWNER ativo antes de remover, suspender ou desativar o anterior. Os advisory locks da migration serializam alterações concorrentes. Os triggers continuam ativos para a conexão administrativa; não devem ser desabilitados.
 
 Rollback das compensações exige nova migration que restaure grants, policies e funções anteriores após avaliação de impacto. Não editar nem remover migrations aplicadas. Reabrir `DELETE` físico ou permitir autoria informada pelo cliente exige revisão de segurança e uma migration compensatória; nunca alterar `harden_soft_delete_and_actor_provenance` no lugar.

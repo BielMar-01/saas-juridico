@@ -17,7 +17,7 @@ describe("API foundation", () => {
     const response = await app.inject({ method: "GET", url: "/api/v1/health" });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
-      data: { status: "ok", service: "jurisvia-api", version: "0.1.0", environment: "test" },
+      data: { status: "ok", service: "jurisvia-api", version: "0.2.0", environment: "test" },
       meta: {},
     });
     expect(response.json().requestId).toEqual(expect.any(String));

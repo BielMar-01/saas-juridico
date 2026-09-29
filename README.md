@@ -53,8 +53,17 @@ pnpm build
 - [`docs/tecnica/arquitetura.md`](docs/tecnica/arquitetura.md): arquitetura proposta e marcos técnicos.
 - [`docs/fluxo-de-trabalho.md`](docs/fluxo-de-trabalho.md): ordem dos agentes e critérios de passagem.
 
-A web está publicada. O PostgreSQL de desenvolvimento recebeu quatro migrations até `harden_soft_delete_and_actor_provenance`; o papel runtime, RLS e grants mínimos estão configurados. Supabase Auth, Storage e o deploy da API ainda não foram configurados.
+A web está publicada. O PostgreSQL de desenvolvimento recebeu cinco migrations até `add_auth_context_and_client_identity`; o papel runtime, RLS e grants mínimos estão configurados. A verificação JWT do Supabase Auth está configurada. Storage e o deploy da API ainda não foram configurados.
 
 ## API
 
 A API Fastify fica em `apps/api`. Use `pnpm dev:web` ou `pnpm dev:api` para desenvolvimento isolado. Após `pnpm build`, use `pnpm start:web` ou `pnpm start:api` para iniciar apenas um app; `pnpm start` inicia os dois pacotes via Turborepo e exige as variáveis da API. Sem definir `PORT`, a web usa `3000` e a API usa `3333`; um `PORT` compartilhado deve ser evitado no comando conjunto. `pnpm test` executa os testes disponíveis. Consulte `apps/api/README.md`, `docs/tecnica/modelo-de-dados.md` e `docs/tecnica/ambiente-e-supabase.md`.
+
+
+## Web autenticada
+
+Copie `apps/web/.env.example` para `apps/web/.env.local` e informe apenas a URL pública do Supabase, a chave publicável e a URL da API. Nunca coloque secret key, service role, `DATABASE_URL` ou `DIRECT_URL` na web.
+
+- `pnpm dev:web` inicia somente a web.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build` validam o monorepo.
+- Não existe cadastro público; contas e vínculos são provisionados pelo fluxo administrativo controlado.

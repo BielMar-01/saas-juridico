@@ -17,15 +17,15 @@ const baseSchema = z.object({
   SUPABASE_JWKS_URL: optionalUrl,
 });
 
-export type ApiEnv = z.infer<typeof baseSchema> & { DATABASE_URL: string };
+export type ApiEnv = z.infer<typeof baseSchema> & { DATABASE_URL: string; SUPABASE_URL: string; SUPABASE_JWKS_URL: string };
 
 export function parseServerEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
   const parsed = baseSchema.safeParse(source);
   if (!parsed.success) {
     throw new Error("Configuração inválida da API: confira as variáveis documentadas em apps/api/.env.example.");
   }
-  if (!parsed.data.DATABASE_URL) {
-    throw new Error("Configuração inválida da API: DATABASE_URL é obrigatória para iniciar o servidor.");
+  if (!parsed.data.DATABASE_URL || !parsed.data.SUPABASE_URL || !parsed.data.SUPABASE_JWKS_URL) {
+    throw new Error("Configuração inválida da API: DATABASE_URL, SUPABASE_URL e SUPABASE_JWKS_URL são obrigatórias para iniciar o servidor.");
   }
   return parsed.data as ApiEnv;
 }

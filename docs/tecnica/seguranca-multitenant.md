@@ -16,7 +16,7 @@ O runtime pode ler o próprio usuário e dados tenant autorizados. Não pode cri
 
 ## Invariantes no banco
 
-Triggers e constraints garantem organização imutável, readiness entre 0 e 100, referências no mesmo tenant, coerência entre documento/caso/cliente, responsável efetivamente ativo e obrigatório em casos ACTIVE, ao menos um OWNER com membership e usuário ativos sob bloqueio concorrente, audit log imutável e preservação de publicação. O primeiro OWNER é criado apenas por um fluxo administrativo futuro. Manutenção de fixtures de auditoria exige simultaneamente o owner da tabela e uma flag local de transação; não é acessível ao runtime.
+Triggers e constraints garantem organização imutável, readiness entre 0 e 100, referências no mesmo tenant, coerência entre documento/caso/cliente, responsável efetivamente ativo e obrigatório em casos ACTIVE, ao menos um OWNER com membership e usuário ativos sob bloqueio concorrente, audit log imutável e preservação de publicação. O primeiro OWNER é criado somente pelo script administrativo de bootstrap, após validar a identidade no Supabase Auth, em transação única e com auditoria. Manutenção de fixtures de auditoria exige simultaneamente o owner da tabela e uma flag local de transação; não é acessível ao runtime.
 
 ## Testes e operação
 
@@ -24,6 +24,6 @@ A suíte cria identificadores aleatórios e testa dois tenants, estados de membe
 
 Para auditoria sanitizada, `pnpm --filter @saas-juridico/api admin:audit-database-security` retorna somente booleanos e contagens. Nunca registrar URLs, senhas ou chaves. O rollback operacional deve restaurar backup ou usar migration compensatória; desabilitar RLS em produção não é procedimento de rollback.
 
-Supabase Auth, claims JWT, RBAC, login e Storage permanecem futuros. Antes deles, deve-se mapear a identidade autenticada para `users.auth_user_id`, resolver membership no servidor e só então iniciar a transação tenant.
+Supabase Auth, login web e validação de claims JWT estão implementados. A API mapeia `sub` para `users.auth_user_id`, resolve memberships ativas no servidor e só então inicia a transação tenant. A matriz RBAC inicial protege o CRUD de clientes; `OWNER` e `ADMIN` exigem `aal2` em toda operação tenant. `GET /api/v1/auth/me` e `GET /api/v1/auth/organizations` permanecem acessíveis em `aal1` exclusivamente para descoberta de estado, seleção de escritório e enrollment/challenge de MFA.
 
-A credencial runtime é interna ao servidor e nunca deve executar SQL, filtros ou identificadores de tabela fornecidos pelo usuário. Auth e RBAC futuros devem autorizar a operação antes de entrar em withTenant.
+A credencial runtime é interna ao servidor e nunca deve executar SQL, filtros ou identificadores de tabela fornecidos pelo usuário. A autorização Auth/RBAC deve ocorrer antes de entrar em `withTenant`. A matriz atual ainda não cobre gestão completa de equipe nem ACL por caso; Storage privado, demais módulos e deploy da API continuam futuros.

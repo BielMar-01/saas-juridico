@@ -1,7 +1,7 @@
 # Arquitetura técnica do SaaS jurídico
 
 Versão 0.1 - 25/09/2026  
-Estado: fundação web e API implementada; PostgreSQL de desenvolvimento provisionado com quatro migrations até `harden_soft_delete_and_actor_provenance`, sem dados de domínio.
+Estado: fundação web e API implementada; PostgreSQL de desenvolvimento provisionado com cinco migrations até `add_auth_context_and_client_identity`, sem dados de domínio.
 
 ## 1 Escopo e ordem
 
@@ -38,9 +38,9 @@ flowchart TD
     A --> U
 ```
 
-A web usa o login do Supabase Auth. A API verifica a identidade recebida e aplica autorização por escritório, função e escopo do caso. O navegador não recebe credenciais privilegiadas do Supabase e não acessa documentos privados diretamente sem permissão verificada.
+A web usa login e cookies SSR do Supabase Auth. A API valida o Bearer token por JWKS, resolve usuário e escritório e aplica a matriz RBAC inicial; `OWNER` e `ADMIN` exigem `aal2` em operações tenant. O navegador não recebe credenciais privilegiadas do Supabase e não acessa documentos privados diretamente sem permissão verificada. A ACL por caso e a gestão completa de equipe permanecem futuras.
 
-Na primeira versão, toda operação autenticada de domínio passa pela API. Consultas diretas do navegador ao Postgres não fazem parte do contrato. RLS forçada é uma camada adicional já implementada e testada; não substitui a futura autorização da API.
+Na primeira versão, toda operação autenticada de domínio passa pela API. Consultas diretas do navegador ao Postgres não fazem parte do contrato. RLS forçada é uma camada adicional implementada e testada; complementa a autorização já aplicada pela API e não substitui a futura ACL por equipe e caso.
 
 ## 4 Estrutura planejada
 
@@ -83,7 +83,7 @@ Os diretórios `apps/`, `packages/` e arquivos de workspace serão criados somen
 
 - Públicas: `/`, `/funcionalidades`, `/como-funciona`, `/contato`, `/privacidade` e `/termos`.
 - Planos: `/planos` somente após validação da proposta comercial.
-- Autenticação: `/entrar`, `/recuperar-senha` e `/aceitar-convite` quando implementados.
+- Autenticação implementada: `/login`, `/esqueci-minha-senha`, `/redefinir-senha` e `/auth/callback`; aceite de convite permanece futuro.
 - Escritório: `/app/*`, com navegação e autorização próprias.
 - Cliente: `/portal/*`, com dados expressamente liberados para sua identidade.
 
@@ -151,17 +151,19 @@ Nome, logo e telas permanecem sujeitos a escolha e aprovação.
 | F Operação interna | Clientes, casos, equipe, documentos e auditoria em incrementos pequenos |
 | G Portal do cliente | Conteúdo explicitamente publicado, status claro e pendências documentais |
 
-## 11 Decisões abertas
+## 11 Decisões consolidadas e abertas
+
+A sessão usa cookies SSR do Supabase Auth na web; a API recebe Bearer token, valida JWT por JWKS, resolve o tenant no servidor e aplica RBAC antes da transação com RLS. Essa implementação está registrada em `backend-auth-clientes.md`; a defesa multi-tenant segue `decisoes/ADR-0002-isolamento-multi-tenant-postgresql.md`.
+
+Continuam abertas:
 
 1. Nome de trabalho e identidade final.
 2. Artes que representam a direção aprovada.
-3. Estratégia de sessão entre Next.js, Supabase Auth e Fastify.
-4. Integração de Auth e modelo de autorização sobre a RLS existente.
-5. Estratégia segura de upload e verificação de arquivos.
-6. Adequação da API Fastify na Vercel.
-7. Destino, consentimento e proteção contra abuso do formulário público.
+3. Estratégia segura de upload e verificação de arquivos.
+4. Adequação da API Fastify à hospedagem escolhida.
+5. Destino, consentimento e proteção contra abuso do formulário público.
 
-Essas decisões serão registradas antes dos blocos correspondentes. Elas não impedem organizar as fontes nem iniciar posteriormente o site público.
+As decisões abertas serão registradas antes dos blocos correspondentes.
 
 ## Rotas públicas e SEO — 27/09/2026
 
@@ -169,4 +171,8 @@ A camada web inclui as rotas estáticas `/`, `/recursos`, `/seguranca`, `/planos
 
 ## Fundação local da API — 27/09/2026
 
-`apps/api` contém Fastify, Zod e Prisma com PostgreSQL, health checks e documentação OpenAPI. A modelagem multi-tenant está em `modelo-de-dados.md`. O PostgreSQL de desenvolvimento recebeu quatro migrations até `harden_soft_delete_and_actor_provenance`, sem dados de aplicação ou seed. O papel runtime, RLS forçada, policies e grants mínimos estão configurados. Supabase Auth, Storage e o deploy da API continuam não configurados; consulte `ambiente-e-supabase.md` e `migrations.md`.
+`apps/api` contém Fastify, Zod e Prisma com PostgreSQL, health checks e documentação OpenAPI. A modelagem multi-tenant está em `modelo-de-dados.md`. O PostgreSQL de desenvolvimento recebeu cinco migrations até `add_auth_context_and_client_identity`, sem dados de aplicação ou seed. O papel runtime, RLS forçada, policies e grants mínimos estão configurados. A verificação de tokens do Supabase Auth está configurada; login permanece direto na web. Storage e o deploy da API continuam não configurados; consulte `ambiente-e-supabase.md` e `migrations.md`.
+
+## Área autenticada web — 29/09/2026
+
+Rotas implementadas: `/login`, `/esqueci-minha-senha`, `/redefinir-senha`, `/auth/callback`, `/app` e `/app/clientes`. A escolha de `/login` substitui os nomes prospectivos antigos desta documentação. Sessões usam cookies SSR do Supabase; autorização e isolamento continuam na API Fastify/PostgreSQL.

@@ -1,0 +1,5 @@
+import type { FastifyInstance,FastifyRequest } from "fastify";
+import { AppError } from "../errors/app-error.js";
+import type { AuthService } from "./service.js";
+export function registerAuth(app:FastifyInstance,service:AuthService){app.decorateRequest("principal",null);app.decorate("authenticate",async(request:FastifyRequest)=>{request.principal=await service.authenticate(request.headers.authorization,request.headers["x-organization-id"]);if(!request.principal.organization)throw new AppError("VALIDATION_ERROR","Selecione uma organização com X-Organization-Id.",400);});app.decorate("authenticateWithoutOrganization",async(request:FastifyRequest)=>{request.principal=await service.authenticate(request.headers.authorization,undefined,false);});}
+export function principal(request:FastifyRequest){if(!request.principal)throw new AppError("UNAUTHORIZED","Credenciais ausentes.",401);return request.principal;}

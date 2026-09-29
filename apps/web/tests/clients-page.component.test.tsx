@@ -1,0 +1,16 @@
+import{describe,expect,it,vi,beforeEach}from"vitest";
+import{render,screen,waitFor}from"@testing-library/react";
+import userEvent from"@testing-library/user-event";
+import{AppContext}from"../components/app/app-context";
+import{ClientsPage}from"../components/app/clients-page";
+import{api}from"../lib/api";
+
+vi.mock("../lib/api",()=>({api:vi.fn(),ApiError:class ApiError extends Error{}}));
+const mockedApi=vi.mocked(api);
+const context={organization:{organizationId:"00000000-0000-4000-8000-000000000001",name:"Escritório teste",slug:"teste",role:"OWNER" as const},principal:{user:{id:"00000000-0000-4000-8000-000000000002",name:"Pessoa teste",email:"teste@example.com"},organization:{organizationId:"00000000-0000-4000-8000-000000000001",name:"Escritório teste",slug:"teste",role:"OWNER" as const},aal:"aal1" as const},refresh:vi.fn()};
+function renderPage(){return render(<AppContext.Provider value={context}><ClientsPage/></AppContext.Provider>)}
+function listResponse(){return{data:[],meta:{page:1,pageSize:10,total:0},requestId:"request-test"}}
+
+describe("ClientsPage dialogs",()=>{beforeEach(()=>{mockedApi.mockReset();mockedApi.mockResolvedValue(listResponse())});
+it("aplica semântica modal, prende o foco, fecha com Escape e restaura o acionador",async()=>{const user=userEvent.setup();renderPage();await screen.findByText("Nenhum cliente encontrado");const opener=screen.getByRole("button",{name:"Novo cliente"});await user.click(opener);const dialog=screen.getByRole("dialog",{name:"Novo cliente"});expect(dialog.getAttribute("aria-modal")).toBe("true");expect(dialog.getAttribute("aria-describedby")).toBeTruthy();expect(screen.getByLabelText("Nome")).toBe(document.activeElement);expect(document.body.style.overflow).toBe("hidden");expect(dialog.parentElement?.previousElementSibling?.getAttribute("aria-hidden")).toBe("true");const close=screen.getByRole("button",{name:"Fechar diálogo"});close.focus();await user.tab({shift:true});expect(screen.getByRole("button",{name:"Cancelar"})).toBe(document.activeElement);await user.tab();expect(close).toBe(document.activeElement);await user.keyboard("{Escape}");expect(screen.queryByRole("dialog")).toBeNull();expect(opener).toBe(document.activeElement);expect(document.body.style.overflow).toBe("")});
+it("mantém o diálogo aberto, anuncia carregamento e bloqueia interação durante o salvamento",async()=>{let finish:((value:unknown)=>void)|undefined;const pending=new Promise(resolve=>{finish=resolve});mockedApi.mockResolvedValueOnce(listResponse()).mockImplementationOnce(()=>pending as ReturnType<typeof api>);const user=userEvent.setup();renderPage();await screen.findByText("Nenhum cliente encontrado");await user.click(screen.getByRole("button",{name:"Novo cliente"}));await user.type(screen.getByLabelText("Nome"),"Cliente teste");await user.click(screen.getByRole("button",{name:"Salvar"}));expect((await screen.findByRole("status")).textContent).toBe("Salvando cliente.");expect(screen.getByRole("dialog")).toBeTruthy();expect(screen.getByRole("button",{name:"Fechar diálogo"})).toHaveProperty("disabled",true);expect(screen.getByRole("button",{name:"Cancelar"})).toHaveProperty("disabled",true);await user.keyboard("{Escape}");expect(screen.getByRole("dialog")).toBeTruthy();finish?.({data:{},meta:{},requestId:"saved"});await waitFor(()=>expect(screen.queryByRole("dialog")).toBeNull())})});
