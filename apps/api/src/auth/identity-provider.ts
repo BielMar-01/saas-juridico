@@ -14,7 +14,7 @@ export class SupabaseAuthIdentityProvider implements AuthIdentityProvider {
   constructor(private baseUrl: string, private publishableKey: string) {}
 
   async getVerifiedIdentity(accessToken: string): Promise<VerifiedAuthIdentity> {
-    let response: Response;
+    let response: { ok: boolean; json(): Promise<unknown> };
     try {
       response = await fetch(new URL("/auth/v1/user", this.baseUrl), {
         headers: { apikey: this.publishableKey, authorization: "Bearer " + accessToken },
