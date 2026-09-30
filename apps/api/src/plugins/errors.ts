@@ -16,12 +16,15 @@ export function registerErrorHandling(app: FastifyInstance): void {
     const appError = error instanceof AppError ? error : undefined;
     const fastifyError = error as FastifyError;
     const statusCode = appError?.statusCode ?? fastifyError.statusCode ?? 500;
-    const isValidation = Array.isArray(fastifyError.validation);
+    const validationIssues = Array.isArray(fastifyError.validation)
+      ? fastifyError.validation as Array<{ instancePath: string; message?: string }>
+      : undefined;
+    const isValidation = validationIssues !== undefined;
     const code = appError?.code ?? (isValidation ? "VALIDATION_ERROR" : statusCode === 429 ? "RATE_LIMIT_EXCEEDED" : "INTERNAL_ERROR");
     const safeStatus = statusCode >= 400 && statusCode < 600 ? statusCode : 500;
     if (safeStatus >= 500) request.log.error({ err: error, requestId: request.id }, "request failed");
     const details = isValidation && process.env.NODE_ENV !== "production"
-      ? fastifyError.validation?.map((issue) => ({ path: issue.instancePath, message: issue.message }))
+      ? validationIssues?.map((issue: { instancePath: string; message?: string }) => ({ path: issue.instancePath, message: issue.message }))
       : appError?.details;
     return reply.status(safeStatus).send({
       error: {

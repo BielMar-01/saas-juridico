@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from "../generated/prisma/client.js";
+import type { PrismaClient } from "../generated/prisma/client.js";
 import type { Principal } from "../auth/service.js";
 import type { AuthIdentityProvider } from "../auth/identity-provider.js";
 import { AppError } from "../errors/app-error.js";
@@ -105,7 +105,7 @@ export class TeamService {
         return row;
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw new AppError("CONFLICT", "Já existe um convite pendente.", 409);
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") throw new AppError("CONFLICT", "Já existe um convite pendente.", 409);
       throw error;
     }
     try {
