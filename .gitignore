@@ -21,3 +21,4 @@ Thumbs.db
 *.log
 pnpm-debug.log*
 .vercel/
+apps/api/src/generated/prisma/

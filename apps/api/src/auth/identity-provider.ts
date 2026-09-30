@@ -16,10 +16,14 @@ export class SupabaseAuthIdentityProvider implements AuthIdentityProvider {
   async getVerifiedIdentity(accessToken: string): Promise<VerifiedAuthIdentity> {
     let response: { ok: boolean; json(): Promise<unknown> };
     try {
-      response = await fetch(new URL("/auth/v1/user", this.baseUrl), {
+      const rawResponse: unknown = await fetch(new URL("/auth/v1/user", this.baseUrl), {
         headers: { apikey: this.publishableKey, authorization: "Bearer " + accessToken },
         signal: AbortSignal.timeout(5000),
       });
+      if (!rawResponse || typeof rawResponse !== "object" || !("ok" in rawResponse) || typeof rawResponse.ok !== "boolean" || !("json" in rawResponse) || typeof rawResponse.json !== "function") {
+        throw new Error("Invalid authentication response.");
+      }
+      response = rawResponse as { ok: boolean; json(): Promise<unknown> };
     } catch {
       throw new AppError("AUTH_SERVICE_UNAVAILABLE", "Serviço de autenticação indisponível.", 503);
     }

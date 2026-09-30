@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "../generated/prisma/client.js";
 import type { Principal } from "../auth/service.js";
 import type { AuthIdentityProvider } from "../auth/identity-provider.js";
 import { AppError } from "../errors/app-error.js";

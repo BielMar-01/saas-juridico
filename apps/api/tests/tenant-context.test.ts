@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "../src/generated/prisma/client.js";
 import { describe, expect, it, vi } from "vitest";
 import { withTenant } from "../src/lib/tenant-context.js";
 

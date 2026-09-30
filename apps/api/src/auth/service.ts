@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../generated/prisma/client.js";
 import { z } from "zod";
 import { AppError } from "../errors/app-error.js";
 import type { AccessClaims,TokenVerifier } from "./jwt.js";
