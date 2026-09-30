@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { describe, expect, it, vi } from "vitest";
-import { createVercelHandler } from "../api/[...path].js";
+import { createVercelHandler } from "../api/index.js";
 import type { ApiEnv } from "../src/env/index.js";
 import { createRuntimeCache } from "../src/runtime.js";
 
@@ -32,7 +32,7 @@ describe("Vercel serverless entrypoint", () => {
   });
 
   it("does not listen, migrate, or disconnect in the request entrypoint", async () => {
-    const source = await readFile(new URL("../api/[...path].ts", import.meta.url), "utf8");
+    const source = await readFile(new URL("../api/index.ts", import.meta.url), "utf8");
     expect(source).not.toMatch(/\.listen\s*\(/);
     expect(source).not.toMatch(/migrate/i);
     expect(source).not.toMatch(/\$disconnect/);

@@ -2,9 +2,9 @@
 
 ## Decisão
 
-A API mantém `buildApp` sem abrir porta, `server.ts` exclusivo para execução local e `api/[...path].ts` como handler serverless catch-all. O runtime e o Prisma Client são reutilizados por instância aquecida; o pool PostgreSQL possui limite pequeno. Migrations são executadas separadamente com `prisma migrate deploy`, nunca no build, boot ou request.
+A API mantém `buildApp` sem abrir porta, `server.ts` exclusivo para execução local e `api/index.ts` como handler serverless único. O runtime e o Prisma Client são reutilizados por instância aquecida; o pool PostgreSQL possui limite pequeno. Migrations são executadas separadamente com `prisma migrate deploy`, nunca no build, boot ou request.
 
-Na Vercel, `apps/api` é um projeto separado da web. a função catch-all `api/[...path].ts` preserva os caminhos `/api/*`; não há `vercel.json` porque a convenção oficial é suficiente. `trustProxy` é habilitado somente em produção, Swagger fica desabilitado em produção, CORS aceita somente `WEB_ORIGIN`, e logs ocultam autorização, cookies, organização e token de convite.
+Na Vercel, `apps/api` é um projeto separado da web. `vercel.json` reescreve `/api/:path*` para a função `api/index.ts`, preservando o caminho original recebido pelo Fastify. `trustProxy` é habilitado somente em produção, Swagger fica desabilitado em produção, CORS aceita somente `WEB_ORIGIN`, e logs ocultam autorização, cookies, organização e token de convite.
 
 ## Variáveis de runtime
 
