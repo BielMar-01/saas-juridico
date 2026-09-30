@@ -1,7 +1,7 @@
 # Arquitetura técnica do SaaS jurídico
 
 Versão 0.1 - 25/09/2026  
-Estado: fundação web e API implementada; PostgreSQL de desenvolvimento provisionado com cinco migrations até `add_auth_context_and_client_identity`, sem dados de domínio.
+Estado: fundação web e API implementada; PostgreSQL de desenvolvimento provisionado com doze migrations até `harden_admin_role_targets`, sem dados de domínio.
 
 ## 1 Escopo e ordem
 
@@ -38,7 +38,7 @@ flowchart TD
     A --> U
 ```
 
-A web usa login e cookies SSR do Supabase Auth. A API valida o Bearer token por JWKS, resolve usuário e escritório e aplica a matriz RBAC inicial; `OWNER` e `ADMIN` exigem `aal2` em operações tenant. O navegador não recebe credenciais privilegiadas do Supabase e não acessa documentos privados diretamente sem permissão verificada. A ACL por caso e a gestão completa de equipe permanecem futuras.
+A web usa login e cookies SSR do Supabase Auth. A API valida o Bearer token por JWKS, resolve usuário e escritório e aplica a matriz RBAC inicial; `OWNER` e `ADMIN` exigem `aal2` em operações tenant. O navegador não recebe credenciais privilegiadas do Supabase e não acessa documentos privados diretamente sem permissão verificada. A gestão de membros e convites está implementada. Handoff de propriedade, lifecycle completo da organização e ACL por caso/equipe e portal do cliente permanecem futuros.
 
 Na primeira versão, toda operação autenticada de domínio passa pela API. Consultas diretas do navegador ao Postgres não fazem parte do contrato. RLS forçada é uma camada adicional implementada e testada; complementa a autorização já aplicada pela API e não substitui a futura ACL por equipe e caso.
 
@@ -83,7 +83,7 @@ Os diretórios `apps/`, `packages/` e arquivos de workspace serão criados somen
 
 - Públicas: `/`, `/funcionalidades`, `/como-funciona`, `/contato`, `/privacidade` e `/termos`.
 - Planos: `/planos` somente após validação da proposta comercial.
-- Autenticação implementada: `/login`, `/esqueci-minha-senha`, `/redefinir-senha` e `/auth/callback`; aceite de convite permanece futuro.
+- Autenticação implementada: `/login`, `/esqueci-minha-senha`, `/redefinir-senha` e `/auth/callback`; aceite de convite implementado em `/convite` e `/aceitar-convite`.
 - Escritório: `/app/*`, com navegação e autorização próprias.
 - Cliente: `/portal/*`, com dados expressamente liberados para sua identidade.
 
@@ -171,8 +171,8 @@ A camada web inclui as rotas estáticas `/`, `/recursos`, `/seguranca`, `/planos
 
 ## Fundação local da API — 27/09/2026
 
-`apps/api` contém Fastify, Zod e Prisma com PostgreSQL, health checks e documentação OpenAPI. A modelagem multi-tenant está em `modelo-de-dados.md`. O PostgreSQL de desenvolvimento recebeu cinco migrations até `add_auth_context_and_client_identity`, sem dados de aplicação ou seed. O papel runtime, RLS forçada, policies e grants mínimos estão configurados. A verificação de tokens do Supabase Auth está configurada; login permanece direto na web. Storage e o deploy da API continuam não configurados; consulte `ambiente-e-supabase.md` e `migrations.md`.
+`apps/api` contém Fastify, Zod e Prisma com PostgreSQL, health checks e documentação OpenAPI. A modelagem multi-tenant está em `modelo-de-dados.md`. O PostgreSQL de desenvolvimento recebeu doze migrations, incluindo convites e endurecimento dos grants, sem dados de aplicação ou seed. O papel runtime, RLS forçada, policies e grants mínimos estão configurados. A verificação de tokens do Supabase Auth está configurada; login permanece direto na web. Storage e o deploy da API continuam não configurados; consulte `ambiente-e-supabase.md` e `migrations.md`.
 
 ## Área autenticada web — 29/09/2026
 
-Rotas implementadas: `/login`, `/esqueci-minha-senha`, `/redefinir-senha`, `/auth/callback`, `/app` e `/app/clientes`. A escolha de `/login` substitui os nomes prospectivos antigos desta documentação. Sessões usam cookies SSR do Supabase; autorização e isolamento continuam na API Fastify/PostgreSQL.
+Rotas implementadas: `/login`, `/esqueci-minha-senha`, `/redefinir-senha`, `/auth/callback`, `/convite`, `/aceitar-convite`, `/app`, `/app/clientes` e `/app/equipe`. A escolha de `/login` substitui os nomes prospectivos antigos desta documentação. Sessões usam cookies SSR do Supabase; autorização e isolamento continuam na API Fastify/PostgreSQL.

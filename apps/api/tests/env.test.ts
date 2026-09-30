@@ -10,10 +10,12 @@ describe("environment contract", () => {
       SUPABASE_PUBLISHABLE_KEY: "publishable-placeholder",
       SUPABASE_SECRET_KEY: "secret-placeholder",
       SUPABASE_JWKS_URL: "https://project.invalid/auth/v1/.well-known/jwks.json",
+      INVITATION_TOKEN_SECRET: "0123456789abcdef0123456789abcdef",
     });
     expect(env.SUPABASE_PUBLISHABLE_KEY).toBe("publishable-placeholder");
     expect(env.SUPABASE_SECRET_KEY).toBe("secret-placeholder");
     expect(env.SUPABASE_JWKS_URL).toBe("https://project.invalid/auth/v1/.well-known/jwks.json");
+    expect(env.INVITATION_TTL_HOURS).toBe(72);
     expect(env).not.toHaveProperty(["SUPABASE", "ANON", "KEY"].join("_"));
     expect(env).not.toHaveProperty(["SUPABASE", "SERVICE", "ROLE", "KEY"].join("_"));
   });

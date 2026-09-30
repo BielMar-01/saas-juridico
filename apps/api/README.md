@@ -1,14 +1,16 @@
 # API JurisVia
 
-Fundação da API de domínio com PostgreSQL de desenvolvimento, cinco migrations aplicadas até `add_auth_context_and_client_identity`, papel runtime restrito e isolamento multi-tenant testado. A verificação JWT do Supabase Auth e o CRUD de clientes estão configurados. Storage e o deploy da API ainda não foram configurados.
+A API de domínio usa Fastify, Prisma e PostgreSQL com doze migrations aplicadas até `harden_admin_role_targets`. O runtime possui isolamento multi-tenant, Auth/JWT, CRUD de clientes e gestão de equipe e convites. O banco de desenvolvimento permanece sem dados de aplicação. Storage, handoff de propriedade, ACL por caso/portal do cliente e publicação da API continuam pendentes.
 
 ## Requisitos e configuração
 
-Use Node.js 24 e pnpm 11. Copie `.env.example` para `.env` local e preencha os valores sem versioná-los. O servidor e os testes de integração exigem `DATABASE_URL`; estes testes também usam `DIRECT_URL` para fixtures administrativas controladas. O build não exige banco. Para Prisma CLI, `DIRECT_URL` é obrigatória.
+Use Node.js 24 e pnpm 11. Copie `.env.example` para `.env` local e preencha os valores sem versioná-los. O servidor usa `DATABASE_URL`; testes de integração e scripts administrativos controlados também usam `DIRECT_URL`. O build não exige banco.
 
-- `DATABASE_URL`: pooler PostgreSQL para execução da aplicação.
-- `DIRECT_URL`: conexão direta PostgreSQL para migrations.
-- `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` e `SUPABASE_JWKS_URL`: usadas pela integração Auth e por operações administrativas controladas. A secret key é exclusiva de scripts administrativos da API e não pertence ao servidor HTTP nem ao frontend.
+- `DATABASE_URL`: pooler PostgreSQL da aplicação.
+- `DIRECT_URL`: conexão administrativa exclusiva de migrations, testes de integração e scripts controlados.
+- `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_JWKS_URL`: runtime HTTP de Auth.
+- `SUPABASE_SECRET_KEY`: somente scripts administrativos; nunca servidor HTTP ou frontend.
+- `INVITATION_TOKEN_SECRET`, `INVITATION_TTL_HOURS` e `INVITATION_RESEND_COOLDOWN_SECONDS`: proteção e ciclo de vida dos convites.
 
 ## Comandos
 
@@ -26,30 +28,27 @@ pnpm --filter @saas-juridico/api admin:preflight-migration
 pnpm --filter @saas-juridico/api admin:audit-database-security
 ```
 
-Migrations devem usar `prisma:migrate:dev -- --name <nome>` somente com conexão de desenvolvimento confirmada. As cinco migrations foram revisadas e aplicadas somente no banco de desenvolvimento. Consulte `docs/tecnica/migrations.md`.
+Migrations devem usar `prisma:migrate:dev -- --name <nome>` somente com a conexão de desenvolvimento confirmada. As doze migrations foram revisadas e aplicadas somente no banco de desenvolvimento. Consulte `docs/tecnica/migrations.md`.
 
 ## Endpoints
 
-- `GET /api/v1/health`: liveness independente do banco.
-- `GET /api/v1/health/database`: consulta segura `SELECT 1`; retorna 503 se PostgreSQL estiver indisponível.
-- `GET /api/docs`: Swagger UI.
+- `GET /api/v1/health` e `GET /api/v1/health/database`.
+- `GET /api/docs`: Swagger UI somente fora de produção.
+- `GET /api/v1/auth/me` e `GET /api/v1/auth/organizations`.
+- CRUD de clientes em `/api/v1/clients`.
+- membros e convites em `/api/v1/team/*`.
+- aceite autenticado em `POST /api/v1/invitations/accept`.
 
 Sucessos usam `{ data, meta, requestId }`; erros usam `{ error: { code, message, details? }, requestId }`.
 
-## Segurança e próximos passos
+## Segurança e isolamento
 
-CORS aceita apenas `WEB_ORIGIN`; Helmet, limite de requisições, cookies, request ID, logs estruturados com redaction e erros seguros estão configurados. Cookies sustentam a sessão web do Supabase Auth. Validação JWT, RLS, privilégios mínimos e a matriz RBAC inicial do CRUD de clientes estão configurados. Gestão completa de equipe, ACL por caso e Storage privado continuam fora do escopo.
+CORS aceita somente `WEB_ORIGIN`; Helmet, rate limit, cookies, request ID, logs com redaction e erros seguros estão configurados. A API valida JWT por JWKS, resolve o escritório ativo e aplica RBAC e AAL2 antes de operações administrativas. Consultas tenant usam `withTenant`; RLS forçada protege 11 tabelas com 44 policies. `anon` e `authenticated` não possuem grants nas tabelas de negócio.
 
-## Isolamento de ambiente no Turborepo
+`OWNER` administra não proprietários; `ADMIN` administra somente `LAWYER` e `ASSISTANT`; `LAWYER` possui leitura da equipe. `CLIENT` não é membership administrativa. Convites têm token aleatório armazenado como HMAC, expiração, uso único, rotação atômica e aceite vinculado ao e-mail verificado. A entrega de e-mail ainda exige um provedor transacional.
 
-Variáveis de banco e Supabase são encaminhadas somente às tarefas `dev` e `start` de `apps/api/turbo.json`. A configuração raiz compartilha apenas `NODE_ENV`; a web não recebe credenciais da API pelo Turborepo.
+O bootstrap inicial usa script administrativo. A gestão comum de membros e convites está implementada por funções privadas mínimas; handoff de `OWNER`, lifecycle organizacional completo, ACL por caso/equipe e permissões do portal do cliente permanecem futuras.
 
-## Acesso multi-tenant
+## Serverless e Turborepo
 
-Operações de domínio devem usar `withTenant` e o `TransactionClient` do callback. Consulte `docs/tecnica/seguranca-multitenant.md` e `docs/tecnica/migrations.md`. O servidor usa somente `DATABASE_URL`; `DIRECT_URL` é administrativa.
-
-O runtime possui leitura tenant de organizações e memberships, mas não pode inserir, alterar ou excluir essas linhas. O bootstrap inicial está implementado no script administrativo `admin:bootstrap-organization`, com validação da identidade, transação e auditoria. Handoff de proprietário e demais fluxos de gestão de equipe permanecem futuros e deverão conservar essas garantias. A credencial runtime nunca deve aceitar SQL fornecido pelo usuário.
-
-## Backend autenticado
-
-A API valida JWT assimétrico do Supabase por JWKS e expõe `GET /api/v1/auth/me`, `GET /api/v1/auth/organizations` e o CRUD de clientes em `/api/v1/clients`. Rotas de domínio exigem Bearer token e `X-Organization-Id`, salvo seleção automática quando o usuário possui uma única organização. Swagger UI não é registrado em produção. Consulte `docs/tecnica/backend-auth-clientes.md`.
+`src/server.ts` abre porta somente no modo local. `api/[...path].ts` é o handler catch-all serverless e reutiliza Fastify e Prisma por instância. Nenhuma migration roda no build, boot ou request. `DIRECT_URL` e `SUPABASE_SECRET_KEY` não são encaminhadas às tarefas HTTP `dev` e `start` no Turbo.

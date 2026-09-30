@@ -1,0 +1,1 @@
+import{TeamPage}from"@/components/app/team-page";export default function Page(){return <TeamPage/>}

@@ -2,14 +2,20 @@
 
 ## Estado
 
-O banco PostgreSQL de desenvolvimento possui cinco migrations aplicadas, sem seed ou dados de aplicação:
+O banco PostgreSQL de desenvolvimento possui doze migrations aplicadas, sem seed ou dados de aplicação:
 
-1. `init_foundation`: dez tabelas, treze enums, relações multi-tenant compostas, índices e chaves estrangeiras com `ON DELETE RESTRICT`.
-2. `add_multi_tenant_rls`: papel runtime restrito, RLS forçada, policies explícitas, grants mínimos e invariantes críticos de integridade.
-3. `harden_active_ownership_and_runtime_grants`: responsável obrigatório para casos ativos, guards concorrentes sobre membership/usuário, proprietário efetivamente ativo, ACL de funções privadas e revogação de escrita runtime em organizações e memberships.
-4. `harden_soft_delete_and_actor_provenance`: revoga exclusão física nas entidades com soft delete, vincula autoria runtime ao usuário corrente e torna a autoria documental imutável.
-5. `add_auth_context_and_client_identity`: adiciona a resolução privada do contexto Auth para o papel runtime e a unicidade de documento ativo por organização.
-
+1. `init_foundation`: estrutura inicial multi-tenant.
+2. `add_multi_tenant_rls`: papel runtime, RLS forçada, policies e grants mínimos.
+3. `harden_active_ownership_and_runtime_grants`: invariantes de proprietário e memberships.
+4. `harden_soft_delete_and_actor_provenance`: soft delete e autoria confiável.
+5. `add_auth_context_and_client_identity`: contexto Auth e identidade de clientes.
+6. `add_team_invitations` (`20260929170000`): tabela e enum de convites.
+7. `add_team_invitations` (`20260929194316`): migration vazia aplicada durante a preparação; mantida imutável para preservar checksum e histórico.
+8. `harden_team_invitations`: lifecycle, índice parcial, RLS, policies e aceite transacional.
+9. `add_team_member_mutation_functions`: funções protegidas de papel e status.
+10. `revoke_invitation_data_api_grants`: revoga acesso de `anon`, `authenticated` e `PUBLIC` aos convites.
+11. `harden_team_identity_and_resend`: restringe alvos ADMIN, impede reativação global no aceite e serializa reenvios.
+12. `harden_admin_role_targets`: exige que o papel atual e o novo papel administrados por ADMIN sejam LAWYER ou ASSISTANT.
 O schema Prisma permanece responsável pela estrutura modelada. SQL nativo versionado implementa RLS, triggers, funções privadas, CHECKs e grants que o Prisma não representa. Não editar migrations aplicadas; toda evolução deve entrar em uma nova migration revisável.
 
 ## Operação segura
@@ -21,7 +27,7 @@ O schema Prisma permanece responsável pela estrutura modelada. SQL nativo versi
 - depois de aplicar, validar `_prisma_migrations`, catálogo RLS/policies/grants, drift estrutural e testes de isolamento;
 - rollback de DDL exige migration compensatória revisada e backup; não apagar registros do histórico.
 
-A migration `add_multi_tenant_rls`, isoladamente, não configura Auth, Storage, login, RBAC ou CRUD. O estado atual já integra Auth/JWT, login web, uma matriz RBAC inicial, bootstrap administrativo e CRUD de clientes; Storage, ACL completa de equipe/casos e demais módulos continuam fora desta migration e desta etapa.
+A migration `add_multi_tenant_rls`, isoladamente, não configura Auth, Storage, login, RBAC ou CRUD. O estado atual já integra Auth/JWT, login web, uma matriz RBAC inicial, bootstrap administrativo e CRUD de clientes; Gestão comum de membros e convites foi adicionada por migrations posteriores. Storage, handoff de OWNER, lifecycle organizacional completo, ACL por caso/equipe e portal do cliente permanecem fora desta etapa.
 
 ## Preflight automatizado
 

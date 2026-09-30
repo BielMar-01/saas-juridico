@@ -1,16 +1,16 @@
 # Ambiente, Supabase e evolução da API
 
-O ambiente local de desenvolvimento possui cinco migrations até `add_auth_context_and_client_identity`, RLS, papel runtime, grants mínimos, validação JWT e login web com sessão SSR configurados. Storage não foi configurado. Ajustes externos do Dashboard — como políticas de provedores, redirect URLs, MFA e signing keys — e a configuração do ambiente de produção permanecem pendentes de decisão e provisionamento próprios.
+O ambiente local de desenvolvimento possui doze migrations, incluindo convites e endurecimento dos grants, RLS, papel runtime, grants mínimos, validação JWT e login web com sessão SSR configurados. Storage não foi configurado. Ajustes externos do Dashboard — como políticas de provedores, redirect URLs, MFA e signing keys — e a configuração do ambiente de produção permanecem pendentes de decisão e provisionamento próprios.
 
 ## Variáveis
 
-A API usa `NODE_ENV`, `PORT`, `HOST`, `LOG_LEVEL`, `WEB_ORIGIN`, `DATABASE_URL` e, para Prisma CLI, `DIRECT_URL`. As variáveis `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` e `SUPABASE_JWKS_URL` atendem à validação JWT e aos scripts administrativos controlados. `SUPABASE_SECRET_KEY` é exclusiva da API e nunca pode chegar ao frontend. A integração web usa somente `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; segredos permanecem exclusivos do backend administrativo.
+A API usa `NODE_ENV`, `PORT`, `HOST`, `LOG_LEVEL`, `WEB_ORIGIN`, `DATABASE_URL` e, para Prisma CLI, `DIRECT_URL`. As variáveis `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_JWKS_URL` atendem ao runtime HTTP. `SUPABASE_SECRET_KEY` pertence somente ao script administrativo de bootstrap, nunca ao runtime HTTP ou frontend. A integração web usa somente `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; segredos permanecem exclusivos do backend administrativo.
 
 No Supabase, a aplicação deverá preferir o pooler compatível com conexões curtas em `DATABASE_URL`; migrations usam `DIRECT_URL`, que pode ser conexão direta ou Session Pooler compatível em `5432`. Ambas exigem SSL conforme o painel. Nunca registrar URLs completas, pois contêm credenciais.
 
 ## Estado do ambiente de desenvolvimento
 
-O projeto PostgreSQL de desenvolvimento e o arquivo local `apps/api/.env` já foram configurados. As conexões administrativa e runtime foram validadas sem expor valores. As cinco migrations foram aplicadas pelo Prisma, e o banco permanece sem dados de aplicação ou seed. Não criar tabelas manualmente, resetar o banco ou aplicar migrations em ambiente desconhecido.
+O projeto PostgreSQL de desenvolvimento e o arquivo local `apps/api/.env` já foram configurados. As conexões administrativa e runtime foram validadas sem expor valores. As doze migrations foram aplicadas pelo Prisma, e o banco permanece sem dados de aplicação ou seed. Não criar tabelas manualmente, resetar o banco ou aplicar migrations em ambiente desconhecido.
 
 Auth, sessão e validação de claims foram integrados e validados com fixture efêmera removida ao final. Buckets e Storage ainda não foram configurados. Policies de banco e testes entre tenants protegem as tabelas de negócio.
 
@@ -22,7 +22,7 @@ Auth, sessão e validação de claims foram integrados e validados com fixture e
 
 A API deve ser publicada como serviço separado da web que já está na Vercel. O projeto, as variáveis e o ciclo de publicação da API não podem alterar o projeto web atual.
 
-A implementação corrente abre uma porta com Fastify, mantém um processo Node.js e trata `SIGINT` e `SIGTERM`. Portanto, a opção recomendada para a primeira publicação é um runtime persistente compatível com Node.js 24, com diretório de trabalho `apps/api`, build TypeScript e comando de inicialização `pnpm start:api`. Railway, Render e Fly.io são alternativas a avaliar por região, custo e operação antes do provisionamento. A Vercel somente deve ser considerada depois de uma prova de conceito com um entrypoint serverless que exporte um handler, não chame `listen()` e reutilize Fastify e Prisma por instância.
+A execução local usa `src/server.ts`, abre uma porta e trata `SIGINT` e `SIGTERM`. Na Vercel, `api/[...path].ts` exporta o handler catch-all, preserva a URL original, não chama `listen()`, não executa migrations e reutiliza Fastify e Prisma por instância aquecida. O build valida separadamente o servidor local e a entrada serverless.
 
 Antes da publicação, devem estar definidos e validados:
 

@@ -53,7 +53,7 @@ pnpm build
 - [`docs/tecnica/arquitetura.md`](docs/tecnica/arquitetura.md): arquitetura proposta e marcos técnicos.
 - [`docs/fluxo-de-trabalho.md`](docs/fluxo-de-trabalho.md): ordem dos agentes e critérios de passagem.
 
-A web está publicada. O PostgreSQL de desenvolvimento recebeu cinco migrations até `add_auth_context_and_client_identity`; o papel runtime, RLS e grants mínimos estão configurados. A verificação JWT do Supabase Auth está configurada. Storage e o deploy da API ainda não foram configurados.
+A web está publicada. O PostgreSQL de desenvolvimento recebeu doze migrations, incluindo convites, proteção de mutações de equipe e revogação dos grants da Data API; o papel runtime, RLS e grants mínimos estão configurados. A verificação JWT do Supabase Auth está configurada. Storage e o deploy da API ainda não foram configurados.
 
 ## API
 

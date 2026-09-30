@@ -4,11 +4,11 @@ import { PrismaClient } from "@prisma/client";
 const globalPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 export function createPrismaClient(connectionString: string): PrismaClient {
-  return new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString, max: 5, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 10_000 }) });
 }
 
 export function getPrismaClient(connectionString: string): PrismaClient {
   const client = globalPrisma.prisma ?? createPrismaClient(connectionString);
-  if (process.env.NODE_ENV !== "production") globalPrisma.prisma = client;
+  globalPrisma.prisma = client;
   return client;
 }

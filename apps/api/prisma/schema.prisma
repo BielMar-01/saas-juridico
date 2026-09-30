@@ -35,6 +35,13 @@ enum OrganizationRole {
   VIEWER
 }
 
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  CANCELLED
+  EXPIRED
+}
+
 enum ClientType {
   INDIVIDUAL
   LEGAL_ENTITY
@@ -100,14 +107,15 @@ enum PublicationType {
 }
 
 model User {
-  id          String                   @id @default(uuid()) @db.Uuid
-  authUserId  String?                  @unique @map("auth_user_id") @db.Uuid
-  name        String
-  email       String                   @unique
-  status      UserStatus               @default(INVITED)
-  createdAt   DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
-  memberships OrganizationMembership[]
+  id                  String                   @id @default(uuid()) @db.Uuid
+  authUserId          String?                  @unique @map("auth_user_id") @db.Uuid
+  name                String
+  email               String                   @unique
+  status              UserStatus               @default(INVITED)
+  createdAt           DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships         OrganizationMembership[]
+  acceptedInvitations Invitation[]             @relation("InvitationAcceptedBy")
 
   @@index([status])
   @@map("users")
@@ -128,33 +136,61 @@ model Organization {
   documents    Document[]
   publications ClientPortalPublication[]
   auditLogs    AuditLog[]
+  invitations  Invitation[]
 
   @@index([status])
   @@map("organizations")
 }
 
 model OrganizationMembership {
-  id                String                    @id @default(uuid()) @db.Uuid
-  organizationId    String                    @map("organization_id") @db.Uuid
-  userId            String                    @map("user_id") @db.Uuid
-  role              OrganizationRole
-  status            MembershipStatus          @default(INVITED)
-  invitedAt         DateTime?                 @map("invited_at") @db.Timestamptz(3)
-  acceptedAt        DateTime?                 @map("accepted_at") @db.Timestamptz(3)
-  createdAt         DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt         DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
-  organization      Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  user              User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
-  responsibleCases  Case[]                    @relation("CaseResponsibleMembership")
-  assignedTasks     Task[]                    @relation("TaskAssigneeMembership")
-  uploadedDocuments Document[]                @relation("DocumentUploaderMembership")
-  publications      ClientPortalPublication[] @relation("PublicationCreatorMembership")
-  auditLogs         AuditLog[]                @relation("AuditActorMembership")
+  id                 String                    @id @default(uuid()) @db.Uuid
+  organizationId     String                    @map("organization_id") @db.Uuid
+  userId             String                    @map("user_id") @db.Uuid
+  role               OrganizationRole
+  status             MembershipStatus          @default(INVITED)
+  invitedAt          DateTime?                 @map("invited_at") @db.Timestamptz(3)
+  acceptedAt         DateTime?                 @map("accepted_at") @db.Timestamptz(3)
+  createdAt          DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization       Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user               User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  responsibleCases   Case[]                    @relation("CaseResponsibleMembership")
+  assignedTasks      Task[]                    @relation("TaskAssigneeMembership")
+  uploadedDocuments  Document[]                @relation("DocumentUploaderMembership")
+  publications       ClientPortalPublication[] @relation("PublicationCreatorMembership")
+  auditLogs          AuditLog[]                @relation("AuditActorMembership")
+  createdInvitations Invitation[]              @relation("InvitationCreatorMembership")
 
   @@unique([organizationId, userId])
   @@index([organizationId, status])
   @@index([userId, status])
   @@map("organization_memberships")
+}
+
+model Invitation {
+  id               String                 @id @default(uuid()) @db.Uuid
+  organizationId   String                 @map("organization_id") @db.Uuid
+  email            String
+  role             OrganizationRole
+  status           InvitationStatus       @default(PENDING)
+  tokenHash        String                 @unique @map("token_hash")
+  expiresAt        DateTime               @map("expires_at") @db.Timestamptz(3)
+  sentAt           DateTime               @default(now()) @map("sent_at") @db.Timestamptz(3)
+  lastSentAt       DateTime               @default(now()) @map("last_sent_at") @db.Timestamptz(3)
+  acceptedAt       DateTime?              @map("accepted_at") @db.Timestamptz(3)
+  cancelledAt      DateTime?              @map("cancelled_at") @db.Timestamptz(3)
+  createdByUserId  String                 @map("created_by_user_id") @db.Uuid
+  acceptedByUserId String?                @map("accepted_by_user_id") @db.Uuid
+  createdAt        DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdByMember  OrganizationMembership @relation("InvitationCreatorMembership", fields: [organizationId, createdByUserId], references: [organizationId, userId], onDelete: Restrict)
+  acceptedByUser   User?                  @relation("InvitationAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, status, createdAt])
+  @@index([organizationId, email])
+  @@index([expiresAt, status])
+  @@map("invitations")
 }
 
 model Client {
