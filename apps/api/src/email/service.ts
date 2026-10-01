@@ -17,7 +17,7 @@ export class ResendEmailProvider implements EmailProvider {
   async send(input:Parameters<EmailProvider["send"]>[0]){
     const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),this.timeoutMs);
     try{
-      const response=await fetch("https://api.resend.com/emails",{method:"POST",signal:controller.signal,headers:{Authorization:`Bearer ${this.apiKey}`,"Content-Type":"application/json","Idempotency-Key":input.idempotencyKey},body:JSON.stringify({from:input.from,to:[input.to],reply_to:input.replyTo,subject:input.subject,html:input.html,text:input.text})});
+      const response=await fetch("https://api.resend.com/emails",{method:"POST",signal:controller.signal,headers:{Authorization:`Bearer ${this.apiKey}`,"Content-Type":"application/json","Idempotency-Key":input.idempotencyKey},body:JSON.stringify({from:input.from,to:[input.to],reply_to:input.replyTo,subject:input.subject,html:input.html,text:input.text})}) as {ok:boolean;status:number;json():Promise<unknown>};
       if(!response.ok)throw new Error(`email provider rejected request (${response.status})`);
       return z.object({id:z.string().min(1)}).parse(await response.json());
     }finally{clearTimeout(timeout);}
