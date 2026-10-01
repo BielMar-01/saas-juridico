@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { AuthService } from "../auth/service.js";
-import { requirePermission } from "../auth/permissions.js";
+import { requirePermission, requireWritableOrganization } from "../auth/permissions.js";
 import { principal } from "../auth/plugin.js";
 import { AppError } from "../errors/app-error.js";
 import { invitationRoles, type TeamService } from "./service.js";
@@ -44,12 +44,14 @@ export async function teamRoutes(app: FastifyInstance, service: TeamService, aut
   app.patch("/api/v1/team/members/:id/role", tenantAuth, async (request) => {
     const current = principal(request);
     requirePermission(current.organization!.role, "team.update", current.aal);
+    requireWritableOrganization(current.organization!.status);
     return { data: await service.updateRole(current, parse(idParams, request.params).id, parse(roleBody, request.body).role), meta: {}, requestId: request.id };
   });
 
   app.patch("/api/v1/team/members/:id/status", tenantAuth, async (request) => {
     const current = principal(request);
     requirePermission(current.organization!.role, "team.update", current.aal);
+    requireWritableOrganization(current.organization!.status);
     return { data: await service.updateStatus(current, parse(idParams, request.params).id, parse(statusBody, request.body).status), meta: {}, requestId: request.id };
   });
 
@@ -63,6 +65,7 @@ export async function teamRoutes(app: FastifyInstance, service: TeamService, aut
   app.post("/api/v1/team/invitations", tenantAuth, async (request, reply) => {
     const current = principal(request);
     requirePermission(current.organization!.role, "invitations.manage", current.aal);
+    requireWritableOrganization(current.organization!.status);
     const row = await service.createInvitation(current, parse(invitationBody, request.body));
     return reply.status(201).send({ data: row, meta: {}, requestId: request.id });
   });
@@ -70,12 +73,14 @@ export async function teamRoutes(app: FastifyInstance, service: TeamService, aut
   app.post("/api/v1/team/invitations/:id/resend", tenantAuth, async (request) => {
     const current = principal(request);
     requirePermission(current.organization!.role, "invitations.manage", current.aal);
+    requireWritableOrganization(current.organization!.status);
     return { data: await service.resendInvitation(current, parse(idParams, request.params).id), meta: {}, requestId: request.id };
   });
 
   app.delete("/api/v1/team/invitations/:id", tenantAuth, async (request) => {
     const current = principal(request);
     requirePermission(current.organization!.role, "invitations.manage", current.aal);
+    requireWritableOrganization(current.organization!.status);
     return { data: await service.cancelInvitation(current, parse(idParams, request.params).id), meta: {}, requestId: request.id };
   });
 

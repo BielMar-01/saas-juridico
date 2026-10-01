@@ -53,7 +53,7 @@ pnpm build
 - [`docs/tecnica/arquitetura.md`](docs/tecnica/arquitetura.md): arquitetura proposta e marcos técnicos.
 - [`docs/fluxo-de-trabalho.md`](docs/fluxo-de-trabalho.md): ordem dos agentes e critérios de passagem.
 
-A web está publicada. O PostgreSQL de desenvolvimento recebeu doze migrations, incluindo convites, proteção de mutações de equipe e revogação dos grants da Data API; o papel runtime, RLS e grants mínimos estão configurados. A verificação JWT do Supabase Auth está configurada. Storage e o deploy da API ainda não foram configurados.
+A web e a API serverless estão publicadas em projetos Vercel separados: `https://saas-juridico-theta.vercel.app` e `https://saas-juridico-api.vercel.app`. O PostgreSQL de desenvolvimento recebeu 29 migrations, incluindo convites, lifecycle organizacional, transferência de ownership, administração global e metadados de e-mail; o papel runtime, RLS e grants mínimos estão configurados. A verificação JWT do Supabase Auth está configurada. Storage permanece não configurado.
 
 ## API
 
@@ -67,3 +67,9 @@ Copie `apps/web/.env.example` para `apps/web/.env.local` e informe apenas a URL 
 - `pnpm dev:web` inicia somente a web.
 - `pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build` validam o monorepo.
 - Não existe cadastro público; contas e vínculos são provisionados pelo fluxo administrativo controlado.
+
+## Segurança organizacional e administração global
+
+O Bloco 4 implementa lifecycle de organizações, transferência de ownership, preferências de notificação, metadados de e-mail, webhook Resend e SUPER_ADMIN global com AAL2 recente. Consulte `docs/tecnica/bloco-4-seguranca-email-admin.md` e `docs/tecnica/decisoes/ADR-0004-administracao-global-e-email.md`.
+
+O bootstrap de SUPER_ADMIN exige um usuário interno já existente, `SUPER_ADMIN_EMAIL` e `DIRECT_URL` em ambiente administrativo controlado; em produção também exige confirmação explícita. Resend permanece desabilitado enquanto chave, segredo de webhook, remetentes verificados e SMTP/DNS não forem configurados externamente.

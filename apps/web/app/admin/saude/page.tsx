@@ -1,0 +1,1 @@
+import{AdminFeed}from"@/components/admin/admin-feed";export default function Page(){return <section className="app-page"><header><p className="eyebrow">Plataforma</p><h1>Saúde</h1></header><AdminFeed kind="health"/></section>}

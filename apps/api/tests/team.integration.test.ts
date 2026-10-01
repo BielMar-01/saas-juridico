@@ -36,6 +36,7 @@ const ownerB = principal(ids.ownerB, "OWNER", ids.orgB);
 beforeAll(async () => {
   admin = new pg.Client({ connectionString: env.DIRECT_URL, connectionTimeoutMillis: 15000 });
   await admin.connect();
+  await admin.query("SET statement_timeout='5s'; SET lock_timeout='2s'");
   await admin.query("INSERT INTO users(id,auth_user_id,name,email,status,updated_at) VALUES($1,$1,'Owner A',$2,'ACTIVE',now()),($3,$3,'Admin A',$4,'ACTIVE',now()),($5,$5,'Lawyer A',$6,'ACTIVE',now()),($7,$7,'Owner B',$8,'ACTIVE',now())", [ids.ownerA, owner.email, ids.adminA, manager.email, ids.lawyerA, "lawyer-" + marker + "@example.invalid", ids.ownerB, ownerB.email]);
   await admin.query("INSERT INTO organizations(id,name,slug,status,updated_at) VALUES($1,$2,$3,'ACTIVE',now()),($4,$5,$6,'ACTIVE',now())", [ids.orgA, "Org A " + marker, "org-a-" + marker, ids.orgB, "Org B " + marker, "org-b-" + marker]);
   await admin.query("INSERT INTO organization_memberships(id,organization_id,user_id,role,status,accepted_at,updated_at) VALUES($1,$2,$3,'OWNER','ACTIVE',now(),now()),($4,$2,$5,'ADMIN','ACTIVE',now(),now()),($6,$2,$7,'LAWYER','ACTIVE',now(),now()),($8,$9,$10,'OWNER','ACTIVE',now(),now())", [ids.memOwnerA, ids.orgA, ids.ownerA, ids.memAdminA, ids.adminA, ids.memLawyerA, ids.lawyerA, ids.memOwnerB, ids.orgB, ids.ownerB]);
@@ -47,9 +48,9 @@ afterAll(async () => {
   try {
     await admin.query("BEGIN");
     await admin.query("SELECT set_config('app.allow_admin_cleanup','on',true)");
-    await admin.query("UPDATE organizations SET status='INACTIVE' WHERE id=ANY($1::uuid[])", [[ids.orgA, ids.orgB]]);
-    for (const table of ["audit_logs", "invitations", "organization_memberships"]) await admin.query("DELETE FROM " + table + " WHERE organization_id=ANY($1::uuid[])", [[ids.orgA, ids.orgB]]);
-    await admin.query("DELETE FROM organizations WHERE id=ANY($1::uuid[])", [[ids.orgA, ids.orgB]]);
+
+    for (const table of ["audit_logs", "invitations"]) await admin.query("DELETE FROM " + table + " WHERE organization_id=ANY($1::uuid[])", [[ids.orgA, ids.orgB]]);
+    await admin.query("UPDATE organizations SET status='ARCHIVED',archived_at=now() WHERE id=ANY($1::uuid[])", [[ids.orgA, ids.orgB]]);await admin.query("DELETE FROM organization_memberships WHERE organization_id=ANY($1::uuid[])",[[ids.orgA, ids.orgB]]);await admin.query("DELETE FROM organizations WHERE id=ANY($1::uuid[])", [[ids.orgA, ids.orgB]]);
     await admin.query("DELETE FROM users WHERE email LIKE $1", ["%" + marker + "%"]);
     await admin.query("COMMIT");
   } catch (error) {
@@ -72,17 +73,18 @@ describe("team and invitation integration", () => {
     expect((await service.updateRole(owner, ids.memLawyerA, "ASSISTANT")).role).toBe("ASSISTANT");
     expect((await service.updateStatus(owner, ids.memLawyerA, "SUSPENDED")).status).toBe("SUSPENDED");
     await service.updateStatus(owner, ids.memLawyerA, "ACTIVE");
-    for (const restrictedRole of ["FINANCIAL", "VIEWER"] as const) {
-      await admin.query("UPDATE organization_memberships SET role=$1 WHERE id=$2", [restrictedRole, ids.memLawyerA]);
-      await expect(service.updateRole(manager, ids.memLawyerA, "LAWYER")).rejects.toMatchObject({ statusCode: 403 });
-      await expect(service.updateStatus(manager, ids.memLawyerA, "SUSPENDED")).rejects.toMatchObject({ statusCode: 403 });
-      await expect(withTenant(prisma, { organizationId: ids.orgA, userId: ids.adminA }, (tx) => tx.$queryRaw`SELECT * FROM private.update_member_role(${ids.memLawyerA}::uuid,'LAWYER'::"OrganizationRole")`)).rejects.toBeDefined();
-      await expect(withTenant(prisma, { organizationId: ids.orgA, userId: ids.adminA }, (tx) => tx.$queryRaw`SELECT * FROM private.update_member_status(${ids.memLawyerA}::uuid,'SUSPENDED'::"MembershipStatus")`)).rejects.toBeDefined();
-      expect((await service.updateStatus(owner, ids.memLawyerA, "SUSPENDED")).status).toBe("SUSPENDED");
-      await service.updateStatus(owner, ids.memLawyerA, "ACTIVE");
-    }
+  }, 12000);
+
+  it.each(["FINANCIAL", "VIEWER"] as const)("enforces ADMIN restrictions for %s targets", async (restrictedRole) => {
+    await admin.query("UPDATE organization_memberships SET role=$1 WHERE id=$2", [restrictedRole, ids.memLawyerA]);
+    await expect(service.updateRole(manager, ids.memLawyerA, "LAWYER")).rejects.toMatchObject({ statusCode: 403 });
+    await expect(service.updateStatus(manager, ids.memLawyerA, "SUSPENDED")).rejects.toMatchObject({ statusCode: 403 });
+    await expect(withTenant(prisma, { organizationId: ids.orgA, userId: ids.adminA }, (tx) => tx.$queryRaw`SELECT * FROM private.update_member_role(${ids.memLawyerA}::uuid,'LAWYER'::"OrganizationRole")`)).rejects.toBeDefined();
+    await expect(withTenant(prisma, { organizationId: ids.orgA, userId: ids.adminA }, (tx) => tx.$queryRaw`SELECT * FROM private.update_member_status(${ids.memLawyerA}::uuid,'SUSPENDED'::"MembershipStatus")`)).rejects.toBeDefined();
+    expect((await service.updateStatus(owner, ids.memLawyerA, "SUSPENDED")).status).toBe("SUSPENDED");
+    await service.updateStatus(owner, ids.memLawyerA, "ACTIVE");
     await admin.query("UPDATE organization_memberships SET role='LAWYER' WHERE id=$1", [ids.memLawyerA]);
-  }, 15000);
+  }, 12000);
 
   it("isolates tenant resources and enforces pending uniqueness", async () => {
     const foreign = await service.createInvitation(ownerB, { email: "foreign-" + marker + "@example.invalid", role: "LAWYER" });

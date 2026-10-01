@@ -18,6 +18,16 @@ const baseSchema = z.object({
   INVITATION_TOKEN_SECRET: optionalSecret,
   INVITATION_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(72),
   INVITATION_RESEND_COOLDOWN_SECONDS: z.coerce.number().int().min(10).max(86400).default(60),
+  APP_PUBLIC_URL: z.url().default("http://localhost:3000"),
+  RESEND_API_KEY: optionalSecret,
+  RESEND_WEBHOOK_SECRET: optionalSecret,
+  EMAIL_FROM_ACCESS: z.string().email().optional(),
+  EMAIL_FROM_INVITATIONS: z.string().email().optional(),
+  EMAIL_FROM_NOTIFICATIONS: z.string().email().optional(),
+  EMAIL_REPLY_TO: z.string().email().optional(),
+  OWNERSHIP_TRANSFER_TTL_HOURS: z.coerce.number().int().min(1).max(168).default(24),
+  SENSITIVE_AUTH_MAX_AGE_SECONDS: z.coerce.number().int().min(60).max(3600).default(900),
+  SUPER_ADMIN_EMAIL: z.string().email().optional(),
 });
 
 export type ApiEnv = z.infer<typeof baseSchema> & { DATABASE_URL: string; SUPABASE_URL: string; SUPABASE_JWKS_URL: string; SUPABASE_PUBLISHABLE_KEY: string; INVITATION_TOKEN_SECRET: string };

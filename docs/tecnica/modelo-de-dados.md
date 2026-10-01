@@ -1,6 +1,6 @@
 # Modelo inicial de dados
 
-Estado: schema Prisma validado e doze migrations de fundação, hardening e identidade aplicadas no banco de desenvolvimento, sem dados de aplicação ou seed.
+Estado: schema Prisma validado e 29 migrations de fundação, hardening, identidade, lifecycle, ownership, administração global e e-mail aplicadas no banco de desenvolvimento, sem dados de aplicação ou seed.
 
 ## Estratégia
 
@@ -35,7 +35,7 @@ Relações essenciais usam `Restrict` e nenhuma cascata destrutiva foi definida.
 
 Unicidades: slug da organização, identidade Auth e e-mail do usuário, membership por organização/usuário, convite pendente por organização/e-mail, hash de convite, número processual por organização e caminho de Storage por organização. Índices começam por `organizationId` nas consultas de tenant e cobrem status, responsáveis, cliente/caso, vencimento, exclusão lógica e ordem de auditoria.
 
-Os enums são deliberadamente conservadores. Estados documentais cobrem o fluxo da RN 014 e `QUARANTINED` prepara a RN 017. Os papéis sustentam a matriz RBAC aplicada ao CRUD de clientes e à gestão de membros e convites; `OWNER` e `ADMIN` exigem `aal2` em toda operação tenant. A migration `add_multi_tenant_rls` complementa as relações Prisma com triggers e constraints para coerência documento/caso/cliente, proprietário ativo mínimo, atores ativos, limites de `readinessScore`, histórico de publicação e imutabilidade de `AuditLog`. A gestão de membros e convites está implementada. Handoff de propriedade, lifecycle organizacional completo e ACL por caso/equipe permanecem futuros.
+Os enums são deliberadamente conservadores. Estados documentais cobrem o fluxo da RN 014 e `QUARANTINED` prepara a RN 017. Os papéis sustentam a matriz RBAC aplicada ao CRUD de clientes e à gestão de membros e convites; `OWNER` e `ADMIN` exigem `aal2` em toda operação tenant. A migration `add_multi_tenant_rls` complementa as relações Prisma com triggers e constraints para coerência documento/caso/cliente, proprietário ativo mínimo, atores ativos, limites de `readinessScore`, histórico de publicação e imutabilidade de `AuditLog`. A gestão de membros e convites, o handoff de propriedade e o lifecycle organizacional estão implementados. ACL por caso/equipe permanece futura.
 
 ## Dados sensíveis e riscos
 

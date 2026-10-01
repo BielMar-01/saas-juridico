@@ -1,7 +1,7 @@
 # Arquitetura técnica do SaaS jurídico
 
 Versão 0.1 - 25/09/2026  
-Estado: fundação web e API implementada; PostgreSQL de desenvolvimento provisionado com doze migrations até `harden_admin_role_targets`, sem dados de domínio.
+Estado: web e API serverless implementadas e publicadas separadamente; PostgreSQL de desenvolvimento provisionado com 29 migrations até `bind_email_sync_to_current_user`, sem dados de domínio.
 
 ## 1 Escopo e ordem
 
@@ -38,7 +38,7 @@ flowchart TD
     A --> U
 ```
 
-A web usa login e cookies SSR do Supabase Auth. A API valida o Bearer token por JWKS, resolve usuário e escritório e aplica a matriz RBAC inicial; `OWNER` e `ADMIN` exigem `aal2` em operações tenant. O navegador não recebe credenciais privilegiadas do Supabase e não acessa documentos privados diretamente sem permissão verificada. A gestão de membros e convites está implementada. Handoff de propriedade, lifecycle completo da organização e ACL por caso/equipe e portal do cliente permanecem futuros.
+A web usa login e cookies SSR do Supabase Auth. A API valida o Bearer token por JWKS, resolve usuário e escritório e aplica a matriz RBAC inicial; `OWNER` e `ADMIN` exigem `aal2` em operações tenant. O navegador não recebe credenciais privilegiadas do Supabase e não acessa documentos privados diretamente sem permissão verificada. A gestão de membros e convites está implementada. Handoff de propriedade e lifecycle da organização estão implementados. ACL por caso/equipe e portal do cliente permanecem futuros.
 
 Na primeira versão, toda operação autenticada de domínio passa pela API. Consultas diretas do navegador ao Postgres não fazem parte do contrato. RLS forçada é uma camada adicional implementada e testada; complementa a autorização já aplicada pela API e não substitui a futura ACL por equipe e caso.
 
@@ -77,7 +77,7 @@ saas-juridico/
 └── package.json
 ```
 
-Os diretórios `apps/`, `packages/` e arquivos de workspace serão criados somente no bootstrap. Não é necessário criar pastas vazias agora.
+Os diretórios `apps/`, `packages/` e os arquivos de workspace foram criados no bootstrap do monorepo.
 
 ## 5 Rotas previstas
 
@@ -171,8 +171,12 @@ A camada web inclui as rotas estáticas `/`, `/recursos`, `/seguranca`, `/planos
 
 ## Fundação local da API — 27/09/2026
 
-`apps/api` contém Fastify, Zod e Prisma com PostgreSQL, health checks e documentação OpenAPI. A modelagem multi-tenant está em `modelo-de-dados.md`. O PostgreSQL de desenvolvimento recebeu doze migrations, incluindo convites e endurecimento dos grants, sem dados de aplicação ou seed. O papel runtime, RLS forçada, policies e grants mínimos estão configurados. A verificação de tokens do Supabase Auth está configurada; login permanece direto na web. Storage e o deploy da API continuam não configurados; consulte `ambiente-e-supabase.md` e `migrations.md`.
+`apps/api` contém Fastify, Zod e Prisma com PostgreSQL, health checks e documentação OpenAPI. A modelagem multi-tenant está em `modelo-de-dados.md`. O PostgreSQL de desenvolvimento recebeu 29 migrations, incluindo convites, lifecycle, ownership, administração global e e-mail, sem dados de aplicação ou seed. O papel runtime, RLS forçada, policies e grants mínimos estão configurados. A verificação de tokens do Supabase Auth está configurada; login permanece direto na web. A API serverless está publicada em projeto Vercel separado; Storage continua não configurado; consulte `ambiente-e-supabase.md` e `migrations.md`.
 
 ## Área autenticada web — 29/09/2026
 
 Rotas implementadas: `/login`, `/esqueci-minha-senha`, `/redefinir-senha`, `/auth/callback`, `/convite`, `/aceitar-convite`, `/app`, `/app/clientes` e `/app/equipe`. A escolha de `/login` substitui os nomes prospectivos antigos desta documentação. Sessões usam cookies SSR do Supabase; autorização e isolamento continuam na API Fastify/PostgreSQL.
+
+## Bloco 4 — lifecycle, e-mail e SUPER_ADMIN
+
+A administração global usa tabela e autenticação separadas de memberships tenant, AAL2 recente e projeções SQL que excluem conteúdo jurídico. Organizações suspensas ou arquivadas permanecem preservadas e somente leitura; arquivamento é terminal. O Resend é opcional e falha fechado em produção quando incompleto. A decisão está em `decisoes/ADR-0004-administracao-global-e-email.md` e os procedimentos em `bloco-4-seguranca-email-admin.md`.

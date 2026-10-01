@@ -1,0 +1,1 @@
+import{AdminDirectory}from"@/components/admin/admin-directory";export default function Page(){return <section className="app-page"><header><p className="eyebrow">Plataforma</p><h1>Usuários</h1></header><AdminDirectory kind="users"/></section>}

@@ -1,0 +1,16 @@
+import type { Prisma,PrismaClient } from "../generated/prisma/client.js";
+import type { Principal } from "../auth/service.js";
+import { AppError } from "../errors/app-error.js";
+async function withPlatform<T>(prisma:PrismaClient,userId:string,operation:(tx:Prisma.TransactionClient)=>Promise<T>){return prisma.$transaction(async tx=>{await tx.$executeRaw`SELECT set_config('app.current_user_id',${userId},true)`;return operation(tx);});}
+export class AdminService{
+ constructor(private prisma:PrismaClient){}
+ overview(p:Principal){return withPlatform(this.prisma,p.userId,async tx=>(await tx.$queryRaw<Record<string,unknown>[]>`SELECT * FROM private.admin_overview()`)[0]);}
+ organizations(p:Principal,q:{search?:string|undefined;status?:"ACTIVE"|"SUSPENDED"|"ARCHIVED"|undefined;page:number;pageSize:number}){return withPlatform(this.prisma,p.userId,tx=>tx.$queryRaw<Array<Record<string,unknown>&{id:string}>>`SELECT * FROM private.admin_list_organizations(${q.search??null},${q.status??null}::public."OrganizationStatus",${q.pageSize},${(q.page-1)*q.pageSize})`);}
+ users(p:Principal,q:{search?:string|undefined;page:number;pageSize:number}){return withPlatform(this.prisma,p.userId,tx=>tx.$queryRaw<Array<Record<string,unknown>&{id:string}>>`SELECT * FROM private.admin_list_users(${q.search??null},${q.pageSize},${(q.page-1)*q.pageSize})`);}
+ async organization(p:Principal,id:string){return withPlatform(this.prisma,p.userId,async tx=>{const[row]=await tx.$queryRaw<Array<Record<string,unknown>>>`SELECT * FROM private.admin_get_organization(${id}::uuid)`;if(!row)throw new AppError("NOT_FOUND","Recurso não encontrado.",404);return row;});}
+ async user(p:Principal,id:string){return withPlatform(this.prisma,p.userId,async tx=>{const[row]=await tx.$queryRaw<Array<Record<string,unknown>>>`SELECT * FROM private.admin_get_user(${id}::uuid)`;if(!row)throw new AppError("NOT_FOUND","Recurso não encontrado.",404);return row;});}
+ async setOrganizationStatus(p:Principal,id:string,status:"ACTIVE"|"SUSPENDED",reason:string){return withPlatform(this.prisma,p.userId,async tx=>{const[row]=await tx.$queryRaw<Array<Record<string,unknown>>>`SELECT * FROM private.admin_set_organization_status(${id}::uuid,${status}::public."OrganizationStatus",${reason})`;if(!row)throw new AppError("NOT_FOUND","Recurso não encontrado.",404);await tx.platformAuditLog.create({data:{userId:p.userId,action:`organization.${status.toLowerCase()}`,entityType:"organization",entityId:id,organizationId:id,result:"success",metadata:{reason}}});return row;});}
+ audit(p:Principal,page:number,pageSize:number){return withPlatform(this.prisma,p.userId,tx=>tx.platformAuditLog.findMany({select:{id:true,userId:true,action:true,entityType:true,entityId:true,organizationId:true,result:true,createdAt:true},orderBy:{createdAt:"desc"},take:pageSize,skip:(page-1)*pageSize}));}
+ emails(p:Principal,page:number,pageSize:number){return withPlatform(this.prisma,p.userId,tx=>tx.emailDelivery.findMany({select:{id:true,provider:true,category:true,template:true,recipientMasked:true,status:true,failureCode:true,createdAt:true,updatedAt:true},orderBy:{createdAt:"desc"},take:pageSize,skip:(page-1)*pageSize}));}
+ async health(p:Principal){return withPlatform(this.prisma,p.userId,async tx=>{await tx.$queryRaw`SELECT 1`;return{api:"ok",database:"ok",emailProvider:"status_not_disclosed"};});}
+}

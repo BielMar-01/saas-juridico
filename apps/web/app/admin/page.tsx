@@ -1,0 +1,1 @@
+import{AdminOverview}from"@/components/admin/admin-overview";export default function Page(){return <section className="app-page"><header><p className="eyebrow">Plataforma</p><h1>Visão geral</h1><p>Somente metadados operacionais, sem conteúdo jurídico.</p></header><AdminOverview/></section>}

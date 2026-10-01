@@ -1,6 +1,6 @@
 # API JurisVia
 
-A API de domínio usa Fastify, Prisma e PostgreSQL com doze migrations aplicadas até `harden_admin_role_targets`. O runtime possui isolamento multi-tenant, Auth/JWT, CRUD de clientes e gestão de equipe e convites. O banco de desenvolvimento permanece sem dados de aplicação. Storage, handoff de propriedade, ACL por caso/portal do cliente e publicação da API continuam pendentes.
+A API de domínio usa Fastify, Prisma e PostgreSQL com 29 migrations aplicadas até `bind_email_sync_to_current_user`. O runtime possui isolamento multi-tenant, Auth/JWT, CRUD de clientes, gestão de equipe e convites, lifecycle organizacional, transferência de ownership, administração global e infraestrutura de e-mail. O banco de desenvolvimento permanece sem dados de aplicação. A API serverless está publicada separadamente da web em `https://saas-juridico-api.vercel.app`. Storage e ACL por caso/portal do cliente continuam pendentes; Resend e o primeiro SUPER_ADMIN dependem de configuração externa controlada.
 
 ## Requisitos e configuração
 
@@ -20,7 +20,7 @@ pnpm --filter @saas-juridico/api build
 pnpm start:api
 pnpm --filter @saas-juridico/api lint
 pnpm --filter @saas-juridico/api typecheck
-pnpm --filter @saas-juridico/api test
+pnpm --filter @saas-juridico/api test # 119 testes em 26 arquivos
 pnpm --filter @saas-juridico/api prisma:format
 pnpm --filter @saas-juridico/api prisma:validate
 pnpm --filter @saas-juridico/api prisma:generate
@@ -28,7 +28,7 @@ pnpm --filter @saas-juridico/api admin:preflight-migration
 pnpm --filter @saas-juridico/api admin:audit-database-security
 ```
 
-Migrations devem usar `prisma:migrate:dev -- --name <nome>` somente com a conexão de desenvolvimento confirmada. As doze migrations foram revisadas e aplicadas somente no banco de desenvolvimento. Consulte `docs/tecnica/migrations.md`.
+Migrations devem usar `prisma:migrate:dev -- --name <nome>` somente com a conexão de desenvolvimento confirmada. As 29 migrations foram revisadas e aplicadas no banco de desenvolvimento. Consulte `docs/tecnica/migrations.md`.
 
 ## Endpoints
 
@@ -43,11 +43,11 @@ Sucessos usam `{ data, meta, requestId }`; erros usam `{ error: { code, message,
 
 ## Segurança e isolamento
 
-CORS aceita somente `WEB_ORIGIN`; Helmet, rate limit, cookies, request ID, logs com redaction e erros seguros estão configurados. A API valida JWT por JWKS, resolve o escritório ativo e aplica RBAC e AAL2 antes de operações administrativas. Consultas tenant usam `withTenant`; RLS forçada protege 11 tabelas com 44 policies. `anon` e `authenticated` não possuem grants nas tabelas de negócio.
+CORS aceita somente `WEB_ORIGIN`; Helmet, rate limit, cookies, request ID, logs com redaction e erros seguros estão configurados. A API valida JWT por JWKS, resolve o escritório ativo e aplica RBAC e AAL2 antes de operações administrativas. Consultas tenant usam `withTenant`; RLS forçada protege 19 tabelas; as 11 tabelas de negócio possuem 44 policies explícitas. `anon` e `authenticated` não possuem grants nas tabelas de negócio.
 
 `OWNER` administra não proprietários; `ADMIN` administra somente `LAWYER` e `ASSISTANT`; `LAWYER` possui leitura da equipe. `CLIENT` não é membership administrativa. Convites têm token aleatório armazenado como HMAC, expiração, uso único, rotação atômica e aceite vinculado ao e-mail verificado. A entrega de e-mail ainda exige um provedor transacional.
 
-O bootstrap inicial usa script administrativo. A gestão comum de membros e convites está implementada por funções privadas mínimas; handoff de `OWNER`, lifecycle organizacional completo, ACL por caso/equipe e permissões do portal do cliente permanecem futuras.
+O bootstrap inicial usa script administrativo. A gestão de membros e convites, o handoff de `OWNER` e o lifecycle organizacional estão implementados por funções privadas mínimas e auditáveis. ACL por caso/equipe e permissões do portal do cliente permanecem futuras.
 
 ## Serverless e Turborepo
 

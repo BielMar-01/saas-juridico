@@ -1,0 +1,1 @@
+import Link from"next/link";export function SettingsNav(){return <nav className="settings-nav" aria-label="Configurações"><Link href="/app/configuracoes/perfil">Perfil</Link><Link href="/app/configuracoes/seguranca">Segurança</Link><Link href="/app/configuracoes/notificacoes">Notificações</Link><Link href="/app/configuracoes/organizacao">Organização</Link></nav>}

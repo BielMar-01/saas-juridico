@@ -1,6 +1,6 @@
 # Ambiente, Supabase e evolução da API
 
-O ambiente local de desenvolvimento possui doze migrations, incluindo convites e endurecimento dos grants, RLS, papel runtime, grants mínimos, validação JWT e login web com sessão SSR configurados. Storage não foi configurado. Ajustes externos do Dashboard — como políticas de provedores, redirect URLs, MFA e signing keys — e a configuração do ambiente de produção permanecem pendentes de decisão e provisionamento próprios.
+O ambiente local de desenvolvimento possui 29 migrations, incluindo convites e endurecimento dos grants, RLS, papel runtime, grants mínimos, validação JWT e login web com sessão SSR configurados. Storage não foi configurado. A API e a web estão publicadas; ajustes externos do Dashboard — políticas de provedores, redirect URLs, MFA, signing keys, SMTP e domínio de e-mail — ainda exigem decisão e validação operacional.
 
 ## Variáveis
 
@@ -10,7 +10,7 @@ No Supabase, a aplicação deverá preferir o pooler compatível com conexões c
 
 ## Estado do ambiente de desenvolvimento
 
-O projeto PostgreSQL de desenvolvimento e o arquivo local `apps/api/.env` já foram configurados. As conexões administrativa e runtime foram validadas sem expor valores. As doze migrations foram aplicadas pelo Prisma, e o banco permanece sem dados de aplicação ou seed. Não criar tabelas manualmente, resetar o banco ou aplicar migrations em ambiente desconhecido.
+O projeto PostgreSQL de desenvolvimento e o arquivo local `apps/api/.env` já foram configurados. As conexões administrativa e runtime foram validadas sem expor valores. As 29 migrations foram aplicadas pelo Prisma, e o banco permanece sem dados de aplicação ou seed. Não criar tabelas manualmente, resetar o banco ou aplicar migrations em ambiente desconhecido.
 
 Auth, sessão e validação de claims foram integrados e validados com fixture efêmera removida ao final. Buckets e Storage ainda não foram configurados. Policies de banco e testes entre tenants protegem as tabelas de negócio.
 
@@ -20,7 +20,7 @@ Auth, sessão e validação de claims foram integrados e validados com fixture e
 
 ## Deploy futuro
 
-A API deve ser publicada como serviço separado da web que já está na Vercel. O projeto, as variáveis e o ciclo de publicação da API não podem alterar o projeto web atual.
+A API está publicada como função serverless em `https://saas-juridico-api.vercel.app`, projeto Vercel separado da web em `https://saas-juridico-theta.vercel.app`. Variáveis, builds e ciclos de publicação permanecem isolados entre os dois projetos.
 
 A execução local usa `src/server.ts`, abre uma porta e trata `SIGINT` e `SIGTERM`. Na Vercel, `api/[...path].ts` exporta o handler catch-all, preserva a URL original, não chama `listen()`, não executa migrations e reutiliza Fastify e Prisma por instância aquecida. O build valida separadamente o servidor local e a entrada serverless.
 
@@ -38,6 +38,6 @@ Antes da publicação, devem estar definidos e validados:
 
 No Dashboard do Supabase, a publicação também exige configurar o Site URL e a allowlist exata de redirect URLs da web, decidir confirmação de e-mail e SMTP, revisar a política de senhas, habilitar e testar TOTP para o gate `aal2` e manter signing keys JWT assimétricas compatíveis com o JWKS consumido pela API. CORS deve aceitar somente a origem pública esperada da web. Essas configurações externas não fazem parte deste repositório.
 
-Enquanto a API separada e suas variáveis de backend não forem publicadas, a área autenticada da web não está disponível em produção. As rotas públicas continuam independentes. A web de produção também precisa apenas das variáveis públicas `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `NEXT_PUBLIC_API_URL`; nenhuma credencial administrativa pode ser exposta ao bundle do navegador.
+A API separada e as variáveis públicas da web foram publicadas. A área autenticada depende ainda da configuração externa do Supabase Auth e de usuários válidos. As rotas públicas continuam independentes. A web de produção usa apenas as variáveis públicas `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `NEXT_PUBLIC_API_URL`; nenhuma credencial administrativa pode ser exposta ao bundle do navegador.
 
 A publicação depende de health local aprovado, conexão pelo pooler testada, migration de produção controlada e autorização explícita. Nenhum serviço ou variável deve ser provisionado apenas para validar esta estratégia documental.

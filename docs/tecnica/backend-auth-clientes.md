@@ -20,7 +20,7 @@ Rotas autenticadas: `POST /api/v1/clients`, `GET /api/v1/clients`, `GET /api/v1/
 
 `pnpm --filter @saas-juridico/api admin:bootstrap-organization` requer variáveis locais `BOOTSTRAP_*`, verifica primeiro o usuário pela Admin API do Supabase e então cria de forma idempotente User ACTIVE, Organization ACTIVE, OWNER ACTIVE e auditoria em uma transação administrativa. `BOOTSTRAP_MODE=verify` valida a identidade sem escrever. O script não roda em start, build ou endpoint e não registra valores. Conflitos causam rollback e saída diferente de zero.
 
-A credencial administrativa e `DIRECT_URL` nunca pertencem ao servidor HTTP. O bootstrap inicial e handoffs permanecem operações controladas. Nenhum usuário real foi criado nesta etapa.
+A credencial administrativa e `DIRECT_URL` nunca pertencem ao servidor HTTP. O bootstrap inicial permanece uma operação administrativa controlada; handoffs usam o fluxo tenant auditado do Bloco 4. Nenhum usuário real foi criado nesta etapa.
 
 ## Frontend autenticado — 29/09/2026
 

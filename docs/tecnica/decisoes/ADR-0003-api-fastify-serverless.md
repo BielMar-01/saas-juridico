@@ -14,4 +14,4 @@ Na Vercel, `apps/api` é um projeto separado da web. `vercel.json` reescreve `/a
 
 ## Limitações
 
-O rate limit em memória atua por instância serverless. As proteções persistentes de convite — unique parcial, cooldown gravado, token de alta entropia e aceite atômico — continuam no PostgreSQL. Antes de maior tráfego, o rate limit geral deverá usar armazenamento compartilhado. A entrega de convites também depende de um provedor futuro.
+O rate limit em memória atua por instância serverless. As proteções persistentes de convite — unique parcial, cooldown gravado, token de alta entropia e aceite atômico — continuam no PostgreSQL. Antes de maior tráfego, o rate limit geral deverá usar armazenamento compartilhado. A integração Resend existe, mas a entrega de convites permanece desativada até a configuração externa e a validação operacional do provedor.

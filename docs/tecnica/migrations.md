@@ -2,41 +2,51 @@
 
 ## Estado
 
-O banco PostgreSQL de desenvolvimento possui doze migrations aplicadas, sem seed ou dados de aplicação:
+O banco PostgreSQL de desenvolvimento possui 29 migrations aplicadas, sem seed ou dados de aplicação:
 
-1. `init_foundation`: estrutura inicial multi-tenant.
-2. `add_multi_tenant_rls`: papel runtime, RLS forçada, policies e grants mínimos.
-3. `harden_active_ownership_and_runtime_grants`: invariantes de proprietário e memberships.
-4. `harden_soft_delete_and_actor_provenance`: soft delete e autoria confiável.
-5. `add_auth_context_and_client_identity`: contexto Auth e identidade de clientes.
-6. `add_team_invitations` (`20260929170000`): tabela e enum de convites.
-7. `add_team_invitations` (`20260929194316`): migration vazia aplicada durante a preparação; mantida imutável para preservar checksum e histórico.
-8. `harden_team_invitations`: lifecycle, índice parcial, RLS, policies e aceite transacional.
-9. `add_team_member_mutation_functions`: funções protegidas de papel e status.
-10. `revoke_invitation_data_api_grants`: revoga acesso de `anon`, `authenticated` e `PUBLIC` aos convites.
-11. `harden_team_identity_and_resend`: restringe alvos ADMIN, impede reativação global no aceite e serializa reenvios.
-12. `harden_admin_role_targets`: exige que o papel atual e o novo papel administrados por ADMIN sejam LAWYER ou ASSISTANT.
-O schema Prisma permanece responsável pela estrutura modelada. SQL nativo versionado implementa RLS, triggers, funções privadas, CHECKs e grants que o Prisma não representa. Não editar migrations aplicadas; toda evolução deve entrar em uma nova migration revisável.
+1. `20260928150120_init_foundation` — estrutura inicial, enums, índices, relações e constraints.
+2. `20260928170000_add_multi_tenant_rls` — role runtime, RLS forçada, policies e invariantes.
+3. `20260928210000_harden_active_ownership_and_runtime_grants` — proprietário/responsável ativo e grants mínimos.
+4. `20260928223000_harden_soft_delete_and_actor_provenance` — soft delete, autoria e auditoria.
+5. `20260929090000_add_auth_context_and_client_identity` — contexto Auth e identidade de clientes.
+6. `20260929170000_add_team_invitations` — tabela e enum de convites.
+7. `20260929194316_add_team_invitations` — migration vazia preservada para manter histórico e checksum.
+8. `20260929210000_harden_team_invitations` — lifecycle, índice parcial, RLS e aceite transacional.
+9. `20260929223000_add_team_member_mutation_functions` — funções protegidas de papel e status.
+10. `20260929234500_revoke_invitation_data_api_grants` — revogação dos grants da Data API.
+11. `20260930003000_harden_team_identity_and_resend` — identidade global bloqueada e reenvio atômico.
+12. `20260930010000_harden_admin_role_targets` — ADMIN limitado a LAWYER e ASSISTANT.
+13. `20260930120000_add_organization_security_email_admin` — lifecycle, ownership, preferências, e-mail e administração global.
+14. `20260930213000_align_block4_prisma_schema` — alinhamento do catálogo com o schema Prisma.
+15. `20260930223000_add_email_webhook_suppression` — eventos idempotentes e supressão por hash.
+16. `20260930224500_harden_ownership_lifecycle` — ownership restrito a organização ativa.
+17. `20260930225500_protect_last_platform_admin` — proteção concorrente do último administrador global.
+18. `20260930231000_add_admin_detail_projections` — projeções operacionais mínimas para administração.
+19. `20261001083000_add_ownership_target_check` — elegibilidade do destinatário da transferência.
+20. `20261001084500_fix_ownership_transfer_ambiguity` — correção de ambiguidade no aceite.
+21. `20261001085500_fix_atomic_owner_handoff_order` — handoff atômico com ordem segura.
+22. `20261001091000_allow_read_only_tenant_lifecycle` — leitura tenant preservada em suspensão e arquivamento.
+23. `20261001093000_add_atomic_tenant_archive` — arquivamento tenant atômico e auditado.
+24. `20261001094000_fix_atomic_tenant_archive_audit_id` — UUID explícito da auditoria de arquivamento.
+O schema Prisma modela a estrutura principal. SQL nativo versionado implementa RLS, triggers, funções privadas, CHECKs e grants que o Prisma não representa. Não edite migrations aplicadas; toda evolução deve entrar em uma nova migration revisável.
 
 ## Operação segura
 
-- migrations usam exclusivamente `DIRECT_URL` em um processo administrativo controlado;
-- a aplicação usa `DATABASE_URL` com o papel `jurisvia_app` e nunca executa migrations;
-- nunca usar `prisma db push`, reset ou seed contra ambiente compartilhado;
-- antes de aplicar, revisar SQL, procurar operações destrutivas e executar preflight transacional quando compatível;
-- depois de aplicar, validar `_prisma_migrations`, catálogo RLS/policies/grants, drift estrutural e testes de isolamento;
-- rollback de DDL exige migration compensatória revisada e backup; não apagar registros do histórico.
+- migrations usam exclusivamente `DIRECT_URL` em processo administrativo controlado;
+- a aplicação usa `DATABASE_URL` com `jurisvia_app` e nunca executa migrations;
+- nunca use `prisma db push`, reset ou seed em ambiente compartilhado;
+- revise SQL, operações destrutivas e segredos antes de aplicar;
+- depois, valide histórico, checksums, RLS, policies, grants, drift e testes de isolamento;
+- rollback de DDL exige backup ou migration compensatória revisada.
 
-A migration `add_multi_tenant_rls`, isoladamente, não configura Auth, Storage, login, RBAC ou CRUD. O estado atual já integra Auth/JWT, login web, uma matriz RBAC inicial, bootstrap administrativo e CRUD de clientes; Gestão comum de membros e convites foi adicionada por migrations posteriores. Storage, handoff de OWNER, lifecycle organizacional completo, ACL por caso/equipe e portal do cliente permanecem fora desta etapa.
+O estado atual integra Auth/JWT, login web, RBAC, CRUD de clientes, equipe e convites, lifecycle organizacional, transferência de OWNER, administração global e infraestrutura de e-mail. Storage, ACL por caso/equipe e portal do cliente permanecem fora desta etapa. Resend e o bootstrap do primeiro SUPER_ADMIN dependem de configuração externa controlada.
 
 ## Preflight automatizado
 
-`pnpm --filter @saas-juridico/api admin:preflight-migration` verifica padrões destrutivos e segredos, checksum do SQL aplicado, estado do catálogo, RLS, policies, grants e drift estrutural, sem imprimir conexões ou credenciais. Quando a migration ainda não existe no histórico, o script executa o SQL dentro de uma transação e faz rollback. Quando já está aplicada, ele não tenta reaplicar DDL: valida checksum, histórico e efeitos no catálogo.
-
-A migration depende de objetos no schema `public` e de um papel global. Reproduzi-la em um schema alternativo não representa fielmente os nomes qualificados nem os grants. Um banco descartável completo é a opção válida para ensaio isolado; ele não foi provisionado nesta etapa para evitar criar ou resetar infraestrutura. O preflight transacional anterior à aplicação e os testes reais no banco vazio permanecem registrados.
+`pnpm --filter @saas-juridico/api admin:preflight-migration` procura operações destrutivas e segredos, valida checksums, catálogo, RLS, policies, grants e drift sem imprimir conexões ou credenciais. Para migration ainda não aplicada, usa transação e rollback quando compatível; para migration aplicada, valida histórico e efeitos no catálogo.
 
 ## Operações administrativas protegidas
 
-A criação da primeira organização e do primeiro OWNER, assim como handoff de proprietário, não usa a credencial runtime. O fluxo implementado usa conexão administrativa separada, transação única e auditoria. Para handoff, criar ou promover o novo OWNER ativo antes de remover, suspender ou desativar o anterior. Os advisory locks da migration serializam alterações concorrentes. Os triggers continuam ativos para a conexão administrativa; não devem ser desabilitados.
+O bootstrap da primeira organização e do primeiro OWNER usa conexão administrativa separada, transação única e auditoria. A transferência posterior de OWNER usa token com HMAC, AAL2 recente, locks e função privada mínima no contexto tenant. O arquivamento também usa função privada atômica e auditada. Triggers permanecem ativos.
 
-Rollback das compensações exige nova migration que restaure grants, policies e funções anteriores após avaliação de impacto. Não editar nem remover migrations aplicadas. Reabrir `DELETE` físico ou permitir autoria informada pelo cliente exige revisão de segurança e uma migration compensatória; nunca alterar `harden_soft_delete_and_actor_provenance` no lugar.
+Nunca edite ou remova migrations aplicadas. Reabrir DELETE físico, ampliar grants ou permitir autoria informada pelo cliente exige migration compensatória e nova revisão de segurança.

@@ -1,0 +1,5 @@
+import test from"node:test";
+import assert from"node:assert/strict";
+import{readFile}from"node:fs/promises";
+test("admin depende da API protegida e não projeta conteúdo jurídico",async()=>{const root=new URL("../",import.meta.url),shell=await readFile(new URL("components/admin/admin-shell.tsx",root),"utf8"),files=["components/admin/admin-directory.tsx","components/admin/admin-detail.tsx","components/admin/admin-feed.tsx"],source=(await Promise.all(files.map(file=>readFile(new URL(file,root),"utf8")))).join("\n");assert.match(shell,/\/api\/v1\/admin\/overview/);assert.equal(/\/api\/v1\/(?:clients|cases|documents|lawsuits)/i.test(source),false);assert.equal(/impersonat/i.test(shell),false)});
+test("segredo TOTP não usa Web Storage nem logs",async()=>{const root=new URL("../",import.meta.url),source=await readFile(new URL("components/auth/mfa-gate.tsx",root),"utf8");assert.equal(/localStorage|sessionStorage|console\.(?:log|info|debug)/.test(source),false);assert.match(source,/setSecret\(""\)/)});

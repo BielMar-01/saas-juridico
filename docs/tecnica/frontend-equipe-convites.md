@@ -6,7 +6,7 @@ A rota `/app/equipe` consome exclusivamente a API Fastify com Bearer token e o e
 
 A navegação e as ações visuais seguem a mesma matriz da API: `OWNER` administra todos os não proprietários; `ADMIN` administra somente `LAWYER` e `ASSISTANT`; `LAWYER` possui leitura; `ASSISTANT`, `FINANCIAL` e `VIEWER` não recebem acesso visual à equipe. Essa camada não substitui a autorização da API.
 
-Convites permitem somente os papéis autorizados para o ator e nunca apresentam `OWNER` ou `CLIENT`. A interface trata criação, reenvio e cancelamento com estados de carregamento e erros seguros. A entrega real depende do provedor transacional futuro documentado no backend.
+Convites permitem somente os papéis autorizados para o ator e nunca apresentam `OWNER` ou `CLIENT`. A interface trata criação, reenvio e cancelamento com estados de carregamento e erros seguros. A integração Resend está implementada, mas a entrega real permanece desativada até configurar externamente chave, webhook, domínio e remetentes verificados.
 
 ## Aceite seguro
 
@@ -20,4 +20,4 @@ Tabelas possuem cabeçalhos e legenda acessível, wrappers com rolagem interna e
 
 ## Limitações
 
-A API continua sendo a autoridade para AAL2, membership, papel e tenant. O frontend não publica a API e não fornece entrega de e-mail. Antes de produção, é necessário conectar e validar o provedor transacional e garantir que a plataforma de hospedagem não registre query strings dos links de entrada.
+A API continua sendo a autoridade para AAL2, membership, papel e tenant. A API é publicada separadamente; o frontend não fornece entrega de e-mail. Antes de ativar e-mail transacional, é necessário conectar e validar o provedor e garantir que a plataforma de hospedagem não registre query strings dos links de entrada.

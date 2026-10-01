@@ -17,7 +17,26 @@ enum UserStatus {
 enum OrganizationStatus {
   ACTIVE
   SUSPENDED
-  INACTIVE
+  ARCHIVED
+}
+
+enum EmailDeliveryStatus {
+  QUEUED
+  SENDING
+  SENT
+  DELIVERED
+  DELAYED
+  BOUNCED
+  COMPLAINED
+  FAILED
+  SUPPRESSED
+}
+
+enum OwnershipTransferStatus {
+  PENDING
+  ACCEPTED
+  CANCELLED
+  EXPIRED
 }
 
 enum MembershipStatus {
@@ -108,39 +127,174 @@ enum PublicationType {
 }
 
 model User {
-  id                  String                   @id @default(uuid()) @db.Uuid
-  authUserId          String?                  @unique @map("auth_user_id") @db.Uuid
-  name                String
-  email               String                   @unique
-  status              UserStatus               @default(INVITED)
-  createdAt           DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt           DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
-  memberships         OrganizationMembership[]
-  acceptedInvitations Invitation[]             @relation("InvitationAcceptedBy")
+  id                          String                   @id @default(uuid()) @db.Uuid
+  authUserId                  String?                  @unique @map("auth_user_id") @db.Uuid
+  name                        String
+  email                       String                   @unique
+  status                      UserStatus               @default(INVITED)
+  createdAt                   DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                   DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships                 OrganizationMembership[]
+  acceptedInvitations         Invitation[]             @relation("InvitationAcceptedBy")
+  notificationPreference      NotificationPreference?
+  platformAdministrator       PlatformAdministrator?
+  platformAuditLogs           PlatformAuditLog[]
+  accountIdentityAudits       AccountIdentityAudit[]
+  requestedOwnershipTransfers OwnershipTransfer[]      @relation("OwnershipTransferRequester")
+  targetedOwnershipTransfers  OwnershipTransfer[]      @relation("OwnershipTransferTarget")
 
   @@index([status])
   @@map("users")
 }
 
 model Organization {
-  id           String                    @id @default(uuid()) @db.Uuid
-  name         String
-  slug         String                    @unique
-  status       OrganizationStatus        @default(ACTIVE)
-  createdAt    DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
-  memberships  OrganizationMembership[]
-  clients      Client[]
-  cases        Case[]
-  lawsuits     Lawsuit[]
-  tasks        Task[]
-  documents    Document[]
-  publications ClientPortalPublication[]
-  auditLogs    AuditLog[]
-  invitations  Invitation[]
+  id                 String                    @id @default(uuid()) @db.Uuid
+  name               String
+  slug               String                    @unique
+  status             OrganizationStatus        @default(ACTIVE)
+  statusReason       String?                   @map("status_reason")
+  suspendedAt        DateTime?                 @map("suspended_at") @db.Timestamptz(3)
+  archivedAt         DateTime?                 @map("archived_at") @db.Timestamptz(3)
+  createdAt          DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships        OrganizationMembership[]
+  clients            Client[]
+  cases              Case[]
+  lawsuits           Lawsuit[]
+  tasks              Task[]
+  documents          Document[]
+  publications       ClientPortalPublication[]
+  auditLogs          AuditLog[]
+  invitations        Invitation[]
+  ownershipTransfers OwnershipTransfer[]
+  emailDeliveries    EmailDelivery[]
 
   @@index([status])
   @@map("organizations")
+}
+
+model NotificationPreference {
+  id                 String   @id @default(uuid()) @db.Uuid
+  userId             String   @unique @map("user_id") @db.Uuid
+  teamEnabled        Boolean  @default(true) @map("team_enabled")
+  officeEnabled      Boolean  @default(true) @map("office_enabled")
+  systemEnabled      Boolean  @default(true) @map("system_enabled")
+  caseUpdatesEnabled Boolean  @default(true) @map("case_updates_enabled")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("notification_preferences")
+}
+
+model AccountIdentityAudit {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  previousEmailHash String   @map("previous_email_hash")
+  newEmailHash      String   @map("new_email_hash")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@map("account_identity_audits")
+}
+
+model PlatformAdministrator {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([active])
+  @@map("platform_administrators")
+}
+
+model PlatformAuditLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  action         String
+  entityType     String   @map("entity_type")
+  entityId       String?  @map("entity_id") @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  result         String
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([organizationId, createdAt])
+  @@map("platform_audit_logs")
+}
+
+model OwnershipTransfer {
+  id             String                  @id @default(uuid()) @db.Uuid
+  organizationId String                  @map("organization_id") @db.Uuid
+  requestedById  String                  @map("requested_by_id") @db.Uuid
+  targetUserId   String                  @map("target_user_id") @db.Uuid
+  tokenHash      String                  @unique @map("token_hash")
+  status         OwnershipTransferStatus @default(PENDING)
+  expiresAt      DateTime                @map("expires_at") @db.Timestamptz(3)
+  acceptedAt     DateTime?               @map("accepted_at") @db.Timestamptz(3)
+  cancelledAt    DateTime?               @map("cancelled_at") @db.Timestamptz(3)
+  createdAt      DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  requestedBy    User                    @relation("OwnershipTransferRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  targetUser     User                    @relation("OwnershipTransferTarget", fields: [targetUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, status, createdAt])
+  @@index([targetUserId, status])
+  @@map("ownership_transfers")
+}
+
+model EmailDelivery {
+  id                String              @id @default(uuid()) @db.Uuid
+  organizationId    String?             @map("organization_id") @db.Uuid
+  idempotencyKey    String              @unique @map("idempotency_key")
+  provider          String
+  providerMessageId String?             @unique @map("provider_message_id")
+  category          String
+  template          String
+  recipientMasked   String              @map("recipient_masked")
+  status            EmailDeliveryStatus @default(QUEUED)
+  lastEventAt       DateTime?           @map("last_event_at") @db.Timestamptz(3)
+  failureCode       String?             @map("failure_code")
+  attemptCount      Int                 @default(0) @map("attempt_count")
+  claimedAt         DateTime?           @map("claimed_at") @db.Timestamptz(3)
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization      Organization?       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  events            EmailWebhookEvent[]
+
+  @@index([organizationId, createdAt])
+  @@index([status, createdAt])
+  @@map("email_deliveries")
+}
+
+model EmailWebhookEvent {
+  id              String         @id @default(uuid()) @db.Uuid
+  providerEventId String         @unique @map("provider_event_id")
+  deliveryId      String?        @map("delivery_id") @db.Uuid
+  eventType       String         @map("event_type")
+  occurredAt      DateTime       @map("occurred_at") @db.Timestamptz(3)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  delivery        EmailDelivery? @relation(fields: [deliveryId], references: [id], onDelete: SetNull)
+
+  @@index([deliveryId, occurredAt])
+  @@map("email_webhook_events")
+}
+
+model EmailSuppression {
+  id              String   @id @default(uuid()) @db.Uuid
+  emailHash       String   @unique @map("email_hash")
+  reason          String
+  providerEventId String?  @map("provider_event_id")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("email_suppressions")
 }
 
 model OrganizationMembership {

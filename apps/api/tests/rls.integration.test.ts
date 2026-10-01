@@ -50,12 +50,13 @@ afterAll(async () => {
   try {
     await admin.query("BEGIN");
     await admin.query("SELECT set_config('app.allow_admin_cleanup','on',true)");
-    await admin.query("UPDATE public.organizations SET status='INACTIVE' WHERE id=ANY($1::uuid[])", [[ids.organizationA, ids.organizationB]]);
+
     await admin.query("DELETE FROM public.client_portal_publications WHERE id=$1", [ids.publicationA]);
     await admin.query("DELETE FROM public.audit_logs WHERE id=$1", [ids.auditA]);
     await admin.query("DELETE FROM public.cases WHERE id=$1", [ids.caseA]);
     await admin.query("DELETE FROM public.clients WHERE id=ANY($1::uuid[])", [[ids.clientA, ids.clientB]]);
-    await admin.query("DELETE FROM public.organization_memberships WHERE id=ANY($1::uuid[])", [[ids.membershipA, ids.membershipB]]);
+    await admin.query("UPDATE public.organizations SET status='ARCHIVED',archived_at=now() WHERE id=ANY($1::uuid[])", [[ids.organizationA, ids.organizationB]]);
+await admin.query("DELETE FROM public.organization_memberships WHERE id=ANY($1::uuid[])", [[ids.membershipA, ids.membershipB]]);
     await admin.query("DELETE FROM public.organizations WHERE id=ANY($1::uuid[])", [[ids.organizationA, ids.organizationB]]);
     await admin.query("DELETE FROM public.users WHERE id=ANY($1::uuid[])", [[ids.userA, ids.userB]]);
     await admin.query("COMMIT");
@@ -127,7 +128,7 @@ describe("real database tenant security", () => {
       await first?.end().catch(() => undefined); await second?.end().catch(() => undefined);
       await admin.query("BEGIN");
       try {
-        await admin.query("UPDATE public.organizations SET status='INACTIVE' WHERE id=$1", [race.organizationId]);
+        await admin.query("UPDATE public.organizations SET status='ARCHIVED',archived_at=now() WHERE id=$1", [race.organizationId]);
         await admin.query("DELETE FROM public.organization_memberships WHERE id=ANY($1::uuid[])", [[race.membershipA, race.membershipB]]);
         await admin.query("DELETE FROM public.organizations WHERE id=$1", [race.organizationId]);
         await admin.query("DELETE FROM public.users WHERE id=ANY($1::uuid[])", [[race.userA, race.userB]]);
