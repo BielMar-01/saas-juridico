@@ -17,15 +17,15 @@ try{
   const identity=await fetchConfirmedAuthIdentity({baseUrl:supabaseUrl,secretKey:supabaseSecretKey,email});
   if(mode==="verify"){
     console.log(JSON.stringify({verified:true,written:false,emailConfirmed:true,active:true}));
-    process.exit(0);
+  }else{
+    const db=new pg.Client({connectionString:databaseUrl,connectionTimeoutMillis:15000});
+    try{
+      await db.connect();
+      const result=await runBootstrapTransaction(db,identity);
+      const[a,b]=identity.email.split("@");
+      console.log(JSON.stringify({verified:true,written:true,created:result.created,replayed:result.replayed,email:`${a.slice(0,2)}***@${b}`,userId:String(result.user.id).slice(0,8)+"...",active:true,role:"SUPER_ADMIN",emailConfirmed:true,mfa:"pending_verification"}));
+    }finally{await db.end().catch(()=>undefined);}
   }
-  const db=new pg.Client({connectionString:databaseUrl,connectionTimeoutMillis:15000});
-  try{
-    await db.connect();
-    const result=await runBootstrapTransaction(db,identity);
-    const[a,b]=identity.email.split("@");
-    console.log(JSON.stringify({verified:true,written:true,created:result.created,replayed:result.replayed,email:`${a.slice(0,2)}***@${b}`,userId:String(result.user.id).slice(0,8)+"...",active:true,role:"SUPER_ADMIN",emailConfirmed:true,mfa:"pending_verification"}));
-  }finally{await db.end().catch(()=>undefined);}
 }catch{
   console.error(JSON.stringify({ok:false,category:"super_admin_bootstrap_failed"}));
   process.exitCode=1;
