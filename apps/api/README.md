@@ -10,6 +10,7 @@ Use Node.js 24 e pnpm 11. Copie `.env.example` para `.env` local e preencha os v
 - `DIRECT_URL`: conexão administrativa exclusiva de migrations, testes de integração e scripts controlados.
 - `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_JWKS_URL`: runtime HTTP de Auth.
 - `SUPABASE_SECRET_KEY`: somente scripts administrativos; nunca servidor HTTP ou frontend.
+- `SUPER_ADMIN_EMAIL` e `SUPER_ADMIN_BOOTSTRAP_MODE`: identidade confirmada e modo `verify`/`apply` do bootstrap administrativo.
 - `INVITATION_TOKEN_SECRET`, `INVITATION_TTL_HOURS` e `INVITATION_RESEND_COOLDOWN_SECONDS`: proteção e ciclo de vida dos convites.
 
 ## Comandos
@@ -20,7 +21,7 @@ pnpm --filter @saas-juridico/api build
 pnpm start:api
 pnpm --filter @saas-juridico/api lint
 pnpm --filter @saas-juridico/api typecheck
-pnpm --filter @saas-juridico/api test # 119 testes em 26 arquivos
+pnpm --filter @saas-juridico/api test # 127 testes em 26 arquivos
 pnpm --filter @saas-juridico/api prisma:format
 pnpm --filter @saas-juridico/api prisma:validate
 pnpm --filter @saas-juridico/api prisma:generate

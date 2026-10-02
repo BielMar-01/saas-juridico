@@ -6,7 +6,7 @@ A transferência de ownership usa solicitação com token aleatório armazenado 
 
 `platform_administrators` mantém o papel global fora de `OrganizationMembership`. Rotas `/api/v1/admin/*` exigem JWT, usuário ativo, registro administrativo ativo e AAL2. As funções SQL retornam apenas projeções operacionais; não há acesso administrativo a documentos, casos, clientes ou conteúdo jurídico.
 
-O comando `pnpm --filter @saas-juridico/api super-admin:bootstrap` promove idempotentemente um usuário já existente e ativo. Ele exige `SUPER_ADMIN_EMAIL` e `DIRECT_URL`; em produção também exige `CONFIRM_PRODUCTION=YES`. O comando não cria senha, não imprime credenciais e registra auditoria. MFA precisa ser ativado pelo usuário no Supabase antes do uso das rotas globais.
+O comando `pnpm --filter @saas-juridico/api super-admin:bootstrap` consulta exatamente o e-mail em `SUPER_ADMIN_EMAIL` pela Admin API e exige identidade Auth ativa e confirmada. `SUPER_ADMIN_BOOTSTRAP_MODE=verify` valida sem banco ou escrita. O modo `apply` exige `DIRECT_URL` e, em produção, `CONFIRM_PRODUCTION=YES`; cria de forma atômica e idempotente `users` ACTIVE, `platform_administrators` ACTIVE e uma auditoria, sem senha, organização ou membership. O e-mail é normalizado para minúsculas e segue política ASCII com domínio qualificado; espaços internos, domínio sem ponto e endereços Unicode são rejeitados. Conflitos de e-mail/Auth provocam rollback. O comando não imprime credenciais. MFA precisa ser ativado pelo usuário antes do uso das rotas globais.
 
 A aplicação depende de uma interface de e-mail independente do provedor. Quando todas as variáveis Resend e remetentes estão presentes, convites usam a API do Resend e registram somente ID do provedor, categoria, template, destinatário mascarado e status. Sem configuração completa, produção falha fechada e desenvolvimento usa entrega nula sem registrar tokens. O webhook usa raw body e a verificação oficial do SDK Resend.
 
@@ -18,7 +18,7 @@ Retenção recomendada: auditoria de plataforma imutável conforme política leg
 
 ## Estado de validação
 
-A API possui 119 testes aprovados em 26 arquivos; a web possui 52 verificações. O catálogo validado contém 29 migrations, 19 tabelas com RLS e 44 policies, sem dados ou fixtures. A API serverless está publicada separadamente da web. O código de Resend, webhook e bootstrap de SUPER_ADMIN está implementado, mas a ativação real continua bloqueada até configurar externamente domínio/remetentes, segredo do webhook, SMTP/DNS e um usuário interno elegível com MFA.
+A API possui 127 testes aprovados em 26 arquivos; a web possui 56 verificações, sendo 16 testes Node e 40 testes Vitest. O catálogo validado contém 29 migrations, 19 tabelas com RLS e 44 policies, sem dados ou fixtures. A API serverless está publicada separadamente da web. O código de Resend, webhook e bootstrap de SUPER_ADMIN está implementado, mas a ativação real continua bloqueada até configurar externamente domínio/remetentes, segredo do webhook, SMTP/DNS e um usuário interno elegível com MFA.
 
 ### Evidência de autenticação recente
 
